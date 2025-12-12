@@ -41,15 +41,16 @@ function sendControllerData() {
   // --- HANDLE STOP ------------------------------------------------
   if (btnX && !stopActive) {
     stopActive = true;
-    console.log("🛑 STOP!");
+    console.log("🛑 STOP activated!");
   }
 
+  const stickLeftY  = applyDeadzone(gp.axes[1]); // Drive
+  const stickRightX = applyDeadzone(gp.axes[0]); // Steer
+
   // Release STOP when sticks neutral
-  const stickLeftY  = applyDeadzone(gp.axes[1]); // Gas/Bremse
-  const stickRightX = applyDeadzone(gp.axes[2] ?? gp.axes[0] ?? 0); // Lenken
   if (stopActive && stickLeftY === 0 && stickRightX === 0) {
     stopActive = false;
-    console.log("▶ STOP RELEASED");
+    console.log("▶ STOP released");
   }
 
   // --- SPEED CONTROL ---------------------------------------------
@@ -58,12 +59,8 @@ function sendControllerData() {
   const factor = speedFactors[speedMode];
 
   // --- AUTO-DRIVE MIXING -----------------------------------------
-  // Nicht invertiert: left = drive + steer, right = drive - steer
-  let drive = stickLeftY;  
-  let steer = stickRightX; 
-
-  let leftMotor  = clamp((drive + steer) * factor, -1, 1);
-  let rightMotor = clamp((drive - steer) * factor, -1, 1);
+  let leftMotor  = clamp((stickLeftY + stickRightX) * factor, -1, 1);
+  let rightMotor = clamp((stickLeftY - stickRightX) * factor, -1, 1);
 
   if (stopActive) {
     leftMotor = 0;
