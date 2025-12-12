@@ -8,8 +8,9 @@ const speedFactors = {1: 0.30, 2: 0.60, 3: 1.00};
 // --- STOP STATE ---
 let stopActive = false;
 
-// --- BATTERY ---
-let battery = 0;
+// --- BUTTON STATE (Debounce) ---
+let lastBtnA = false;
+let lastBtnY = false;
 
 // --- CLAMP FUNCTION ---
 function clamp(value, min, max) {
@@ -25,12 +26,7 @@ function applyDeadzone(v, dz = 0.12) {
 ws.onopen = () => console.log("✅ WebSocket connected");
 
 ws.onmessage = (event) => {
-  try {
-    const data = JSON.parse(event.data);
-    if (data.battery !== undefined) battery = data.battery.toFixed(2);
-  } catch (err) {
-    console.warn("⚠️ Fehler beim Verarbeiten der Server-Nachricht:", err);
-  }
+  // keine Batterie mehr, einfach ignorieren
 };
 
 // --- GAMEPAD LOOP ---
@@ -51,15 +47,19 @@ function sendControllerData() {
   const btnY = gp.buttons[3]?.pressed; // Speed up
 
   // --- HANDLE STOP ---
-  stopActive = btnX; // Solange X gedrückt, Stop aktiv
+  stopActive = btnX; // solange X gedrückt → Stop
 
-  const stickLeftY  = applyDeadzone(gp.axes[1]); // Drive
-  const stickRightX = applyDeadzone(gp.axes[2]); // Steer
+  // --- SPEED CONTROL (Debounce) ---
+  if (btnY && !lastBtnY) speedMode = Math.min(3, speedMode + 1);
+  if (btnA && !lastBtnA) speedMode = Math.max(1, speedMode - 1);
+  lastBtnA = btnA;
+  lastBtnY = btnY;
 
-  // --- SPEED CONTROL ---
-  if (btnY) speedMode = Math.min(3, speedMode + 1);
-  if (btnA) speedMode = Math.max(1, speedMode - 1);
   const factor = speedFactors[speedMode];
+
+  // --- STICKS ---
+  const stickLeftY  = -applyDeadzone(gp.axes[1]); // Drive invertiert
+  const stickRightX = applyDeadzone(gp.axes[2]);  // Steer
 
   // --- AUTO-DRIVE MIXING ---
   let leftMotor  = clamp((stickLeftY + stickRightX) * factor, -1, 1);
@@ -78,16 +78,13 @@ function sendControllerData() {
     speedMode: speedMode,
     stop: stopActive
   };
-  if (ws.readyState === WebSocket.OPEN) {
-    ws.send(JSON.stringify(data));
-  }
+  if (ws.readyState === WebSocket.OPEN) ws.send(JSON.stringify(data));
 
-  // --- UPDATE FRONTEND FIELDS ---
+  // --- UPDATE FRONTEND ---
   document.getElementById("speedMode").textContent = `Vitesse: ${speedMode} (${Math.round(factor*100)}%)`;
   document.getElementById("stopState").textContent = `STOP: ${stopActive ? "ON" : "OFF"}`;
   document.getElementById("stickValues").textContent = `Drive: ${stickLeftY.toFixed(2)} | Steer: ${stickRightX.toFixed(2)}`;
   document.getElementById("buttons").textContent = `Buttons: ${btnA ? "A " : ""}${btnB ? "B " : ""}${btnX ? "X " : ""}${btnY ? "Y " : ""}`.trim();
-  document.getElementById("battery").textContent = `Battery: ${battery} V`;
 
   requestAnimationFrame(sendControllerData);
 }
