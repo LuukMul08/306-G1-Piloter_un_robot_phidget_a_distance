@@ -37,11 +37,33 @@ async function main() {
         process.exit(1);
     }
 
+    // --- Optional: Batterie ---
+    let batterySensor;
+    let batteryAvailable = false;
+    const minVolt = 6.0;   // Minimalspannung Akku
+    const maxVolt = 8.4;   // Maximalspannung Akku
+
+    try {
+        batterySensor = new phidget22.VoltageInput();
+        batterySensor.setIsRemote(true);
+        batterySensor.setDeviceSerialNumber(667784);
+        batterySensor.setChannel(2); // VoltageInput Kanal
+
+        await batterySensor.open(5000);
+        batteryAvailable = true;
+        console.log('✅ Batteriesensor bereit (optional)');
+    } catch (err) {
+        console.warn('⚠️ Batterie optional: Sensor nicht gefunden oder Kanal falsch', err.message);
+    }
+
     // --- CTRL+C Cleanup ---
     process.on('SIGINT', async () => {
         console.log('🛑 Motoren herunterfahren...');
         await motorLeft.close();
         await motorRight.close();
+        if (batteryAvailable) {
+            try { await batterySensor.close(); } catch {}
+        }
         process.exit();
     });
 
@@ -82,10 +104,20 @@ async function main() {
                     motorRight.setTargetVelocity(speedRight);
                 }
 
-                // --- Keine Batterie ---
-                // Einfach die Nachricht ohne battery senden
+                // --- Batterie optional ---
+                let batteryPercent = null;
+                if (batteryAvailable) {
+                    try {
+                        const voltage = await batterySensor.getVoltage();
+                        batteryPercent = Math.min(100, Math.max(0, ((voltage - minVolt) / (maxVolt - minVolt)) * 100));
+                    } catch {
+                        batteryPercent = null;
+                    }
+                }
+
+                // --- Nachricht an Client ---
                 if (ws.readyState === ws.OPEN) {
-                    ws.send(JSON.stringify({}));
+                    ws.send(JSON.stringify({ battery: batteryPercent }));
                 }
 
             } catch (err) {
