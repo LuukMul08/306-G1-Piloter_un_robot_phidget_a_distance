@@ -1,0 +1,7 @@
+{
+    "java.project.referencedLibraries": [
+        "lib/**/*.jar",
+        "code/phidget22.jar",
+        "code/jinput-2.0.10.jar"
+    ]
+}
