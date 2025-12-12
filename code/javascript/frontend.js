@@ -51,18 +51,10 @@ function sendControllerData() {
   const btnY = gp.buttons[3]?.pressed; // Speed up
 
   // --- HANDLE STOP ---
-  if (btnX && !stopActive) {
-    stopActive = true;
-    console.log("🛑 STOP activated!");
-  }
+  stopActive = btnX; // Solange X gedrückt, Stop aktiv
 
   const stickLeftY  = applyDeadzone(gp.axes[1]); // Drive
   const stickRightX = applyDeadzone(gp.axes[2]); // Steer
-
-  if (stopActive && stickLeftY === 0 && stickRightX === 0) {
-    stopActive = false;
-    console.log("▶ STOP released");
-  }
 
   // --- SPEED CONTROL ---
   if (btnY) speedMode = Math.min(3, speedMode + 1);
@@ -70,9 +62,10 @@ function sendControllerData() {
   const factor = speedFactors[speedMode];
 
   // --- AUTO-DRIVE MIXING ---
-  let leftMotor  = clamp(stickLeftY + stickRightX, -1, 1) * factor;
-  let rightMotor = clamp(stickLeftY - stickRightX, -1, 1) * factor;
+  let leftMotor  = clamp((stickLeftY + stickRightX) * factor, -1, 1);
+  let rightMotor = clamp((stickLeftY - stickRightX) * factor, -1, 1);
 
+  // --- STOP ---
   if (stopActive) {
     leftMotor = 0;
     rightMotor = 0;
