@@ -1,4 +1,3 @@
-// server.mjs
 import * as phidget22 from 'phidget22';
 import { WebSocketServer } from 'ws';
 
@@ -41,7 +40,7 @@ async function main() {
     let distanceSensor;
     let distanceAvailable = false;
     let lastDistance = 100; // initial sehr weit weg
-    const minDistance = 20; // Abstand in cm, unterhalb dessen Vorwärts gestoppt wird
+    const minDistance = 20; // cm
 
     try {
         distanceSensor = new phidget22.DistanceSensor();
@@ -55,7 +54,7 @@ async function main() {
 
         await distanceSensor.open(5000);
         distanceAvailable = true;
-        console.log('✅ Distanzsensor bereit (Port 1, Channel 0)');
+        console.log('✅ Distanzsensor bereit');
     } catch (err) {
         console.warn('⚠️ Distanzsensor optional: Sensor nicht gefunden oder Kanal falsch', err.message);
     }
@@ -74,6 +73,31 @@ async function main() {
     // --- Helper ---
     function clamp(v, min, max) {
         return Math.max(min, Math.min(max, v));
+    }
+
+    // --- Virtuelle Batterie ---
+    const BATTERY_V = 9.6;
+    const BATTERY_CAPACITY_AH = 2;
+    const MOTOR_CURRENT_MAX = 2; // A pro Motor
+    const SONAR_CURRENT = 0.05;
+    let batteryPercent = 100;
+    let lastBatteryUpdate = Date.now();
+
+    function updateBatteryPercent(leftMotorSpeed, rightMotorSpeed) {
+        const now = Date.now();
+        const dt = (now - lastBatteryUpdate) / 1000; // Sekunden
+        lastBatteryUpdate = now;
+
+        const currentLeft = Math.abs(leftMotorSpeed) * MOTOR_CURRENT_MAX;
+        const currentRight = Math.abs(rightMotorSpeed) * MOTOR_CURRENT_MAX;
+        const totalCurrent = currentLeft + currentRight + SONAR_CURRENT;
+
+        const energyUsed = BATTERY_V * totalCurrent * (dt / 3600); // Wh
+        const batteryEnergy = BATTERY_V * BATTERY_CAPACITY_AH;      // Wh
+        const percentUsed = (energyUsed / batteryEnergy) * 100;
+
+        batteryPercent = Math.max(0, batteryPercent - percentUsed);
+        return batteryPercent;
     }
 
     let lastUpdate = 0;
@@ -110,21 +134,14 @@ async function main() {
                 motorLeft.setTargetVelocity(speedLeft);
                 motorRight.setTargetVelocity(speedRight);
 
-                // --- Batterie auslesen (Motor-Spannung) ---
-                let batteryVoltage = 0;
-                try {
-                    const vLeft = await motorLeft.getVoltage();
-                    const vRight = await motorRight.getVoltage();
-                    batteryVoltage = (vLeft + vRight) / 2; // Mittelwert, da beide Motoren am gleichen Power-Port hängen
-                } catch (err) {
-                    console.warn('⚠️ Fehler beim Auslesen der Spannung:', err.message);
-                }
+                // --- Batterie simulieren ---
+                const battery = updateBatteryPercent(speedLeft, speedRight);
 
                 // --- Nachricht an Client (Distanz + Batterie) ---
                 if (ws.readyState === ws.OPEN) {
                     ws.send(JSON.stringify({
                         distance: distanceAvailable ? lastDistance.toFixed(1) : null,
-                        battery: batteryVoltage.toFixed(2)
+                        battery: battery.toFixed(1)
                     }));
                 }
 
