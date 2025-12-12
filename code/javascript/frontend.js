@@ -17,8 +17,8 @@ let lastBtnX = false;
 
 // --- DISTANCE SENSOR ---
 let distance = null;
-const minDistanceBlock = 300;  // mm
-const minDistanceSlow = 1000;  // mm
+const minDistanceBlock = 300; // mm
+const minDistanceSlow = 1000; // mm
 
 // --- CLAMP & DEADZONE ---
 function clamp(value, min, max) { return Math.max(min, Math.min(max, value)); }
@@ -30,22 +30,16 @@ ws.onmessage = (event) => {
   try {
     const data = JSON.parse(event.data);
     if (data.distance !== undefined && data.distance !== null) distance = parseFloat(data.distance);
-  } catch (err) {
-    console.warn("⚠️ Fehler beim Verarbeiten der Server-Nachricht:", err);
-  }
+  } catch (err) { console.warn("⚠️ Fehler beim Verarbeiten der Server-Nachricht:", err); }
 }
-
-// --- LETZTE MOTOR-WERTE (um unnötige Sends zu vermeiden) ---
-let lastLeftMotor = null;
-let lastRightMotor = null;
 
 // --- GAMEPAD LOOP ---
 function sendControllerData() {
   const gp = navigator.getGamepads()[0];
-  if (!gp) {
-    status.textContent = "⏳ Waiting for controller...";
-    requestAnimationFrame(sendControllerData);
-    return;
+  if (!gp) { 
+    status.textContent = "⏳ Waiting for controller..."; 
+    requestAnimationFrame(sendControllerData); 
+    return; 
   }
   status.textContent = `🎮 Controller connected: ${gp.id}`;
 
@@ -59,7 +53,7 @@ function sendControllerData() {
   if (btnX && !lastBtnX) stopActive = !stopActive;
   lastBtnX = btnX;
 
-  // --- DISTANZ-LOGIK (SpeedLock) ---
+  // --- DISTANZ-LOGIK ---
   if (distance !== null) {
     if (distance < minDistanceSlow && distance >= minDistanceBlock) {
       if (!speedLock) { prevSpeedMode = speedMode; speedLock = true; }
@@ -76,12 +70,11 @@ function sendControllerData() {
   let forward = -applyDeadzone(gp.axes[1]);
   const steer = applyDeadzone(gp.axes[2]);
 
-  // RT/LT Steuerung
   if (btnRT > 0 && btnLT === 0) forward = btnRT;
   else if (btnLT > 0 && btnRT === 0) forward = -btnLT;
   else if (btnRT > 0 && btnLT > 0) forward = 0;
 
-  // --- Vorwärts blockieren bei zu geringer Distanz ---
+  // --- Blockierung Vorwärts bei zu geringer Distanz ---
   if (distance !== null && distance < minDistanceBlock && forward > 0) forward = 0;
 
   // --- BUTTON SPEED CONTROL ---
@@ -92,20 +85,17 @@ function sendControllerData() {
   lastBtnA = btnA;
   lastBtnY = btnY;
 
-  // --- MOTOR OUTPUT ---
-  let leftMotor = clamp((forward + steer) * factor, -1, 1);
-  let rightMotor = clamp((forward - steer) * factor, -1, 1);
+  // --- MOTOR OUTPUT (const bleiben!) ---
+  const leftMotor = clamp((forward + steer) * factor, -1, 1);
+  const rightMotor = clamp((forward - steer) * factor, -1, 1);
 
-  // STOP überschreibt alles
-  if (stopActive) { leftMotor = 0; rightMotor = 0; }
+  // --- STOP LOGIK: nur beim Senden 0 einsetzen ---
+  const sendLeft = stopActive ? 0 : leftMotor;
+  const sendRight = stopActive ? 0 : rightMotor;
 
-  // --- SEND TO SERVER NUR WENN SICH WERTE GEÄNDERT HABEN ---
+  // --- SEND TO SERVER ---
   if (ws.readyState === WebSocket.OPEN) {
-    if (leftMotor !== lastLeftMotor || rightMotor !== lastRightMotor) {
-      ws.send(JSON.stringify({ leftY: leftMotor, rightY: rightMotor, speedMode, stop: stopActive }));
-      lastLeftMotor = leftMotor;
-      lastRightMotor = rightMotor;
-    }
+    ws.send(JSON.stringify({ leftY: sendLeft, rightY: sendRight, speedMode, stop: stopActive }));
   }
 
   // --- UPDATE FRONTEND ---
@@ -119,7 +109,7 @@ function sendControllerData() {
 }
 
 // --- START LOOP ---
-window.addEventListener("gamepadconnected", () => {
-  console.log("🎮 Controller connected!");
-  sendControllerData();
+window.addEventListener("gamepadconnected", () => { 
+  console.log("🎮 Controller connected!"); 
+  sendControllerData(); 
 });
