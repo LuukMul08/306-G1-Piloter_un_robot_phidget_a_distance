@@ -64,9 +64,10 @@ function sendControllerData() {
   // --- AUTO-DRIVE MIXING ---
   let forward = stickLeftY;
 
-  // RT/LT Override: RT = vorwärts, LT = rückwärts
-  if (btnRT > 0) forward = btnRT;
-  if (btnLT > 0) forward = -btnLT;
+  // RT/LT Steuerung
+  if (btnRT > 0 && btnLT === 0) forward = btnRT;       // nur RT → vorwärts
+  else if (btnLT > 0 && btnRT === 0) forward = -btnLT; // nur LT → rückwärts
+  else if (btnRT > 0 && btnLT > 0) forward = 0;        // beide → stehen bleiben
 
   let leftMotor  = clamp((forward + stickRightX) * factor, -1, 1);
   let rightMotor = clamp((forward - stickRightX) * factor, -1, 1);
