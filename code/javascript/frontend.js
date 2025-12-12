@@ -11,6 +11,7 @@ let stopActive = false;
 // --- BUTTON STATE (Debounce) ---
 let lastBtnA = false;
 let lastBtnY = false;
+let lastBtnX = false;
 
 // --- CLAMP FUNCTION ---
 function clamp(value, min, max) {
@@ -24,10 +25,6 @@ function applyDeadzone(v, dz = 0.12) {
 
 // --- WEBSOCKET EVENTS ---
 ws.onopen = () => console.log("✅ WebSocket connected");
-
-ws.onmessage = (event) => {
-  // keine Batterie mehr, einfach ignorieren
-};
 
 // --- GAMEPAD LOOP ---
 function sendControllerData() {
@@ -43,11 +40,14 @@ function sendControllerData() {
   // --- BUTTONS ---
   const btnA = gp.buttons[0]?.pressed; // Speed down
   const btnB = gp.buttons[1]?.pressed; // optional
-  const btnX = gp.buttons[2]?.pressed; // STOP
+  const btnX = gp.buttons[2]?.pressed; // STOP toggle
   const btnY = gp.buttons[3]?.pressed; // Speed up
+  const btnLT = gp.buttons[6]?.value || 0; // analog 0-1
+  const btnRT = gp.buttons[7]?.value || 0; // analog 0-1
 
-  // --- HANDLE STOP ---
-  stopActive = btnX; // solange X gedrückt → Stop
+  // --- HANDLE STOP TOGGLE ---
+  if (btnX && !lastBtnX) stopActive = !stopActive;
+  lastBtnX = btnX;
 
   // --- SPEED CONTROL (Debounce) ---
   if (btnY && !lastBtnY) speedMode = Math.min(3, speedMode + 1);
@@ -62,8 +62,14 @@ function sendControllerData() {
   const stickRightX = applyDeadzone(gp.axes[2]);  // Steer
 
   // --- AUTO-DRIVE MIXING ---
-  let leftMotor  = clamp((stickLeftY + stickRightX) * factor, -1, 1);
-  let rightMotor = clamp((stickLeftY - stickRightX) * factor, -1, 1);
+  let forward = stickLeftY;
+
+  // RT/LT Override: RT = vorwärts, LT = rückwärts
+  if (btnRT > 0) forward = btnRT;
+  if (btnLT > 0) forward = -btnLT;
+
+  let leftMotor  = clamp((forward + stickRightX) * factor, -1, 1);
+  let rightMotor = clamp((forward - stickRightX) * factor, -1, 1);
 
   // --- STOP ---
   if (stopActive) {
@@ -83,7 +89,7 @@ function sendControllerData() {
   // --- UPDATE FRONTEND ---
   document.getElementById("speedMode").textContent = `Vitesse: ${speedMode} (${Math.round(factor*100)}%)`;
   document.getElementById("stopState").textContent = `STOP: ${stopActive ? "ON" : "OFF"}`;
-  document.getElementById("stickValues").textContent = `Drive: ${stickLeftY.toFixed(2)} | Steer: ${stickRightX.toFixed(2)}`;
+  document.getElementById("stickValues").textContent = `Drive: ${forward.toFixed(2)} | Steer: ${stickRightX.toFixed(2)}`;
   document.getElementById("buttons").textContent = `Buttons: ${btnA ? "A " : ""}${btnB ? "B " : ""}${btnX ? "X " : ""}${btnY ? "Y " : ""}`.trim();
 
   requestAnimationFrame(sendControllerData);
