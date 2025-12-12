@@ -47,7 +47,7 @@ async function main() {
         distanceSensor = new phidget22.DistanceSensor();
         distanceSensor.setIsRemote(true);
         distanceSensor.setDeviceSerialNumber(667784);
-        distanceSensor.setChannel(0); // Korrekt: Channel 0
+        distanceSensor.setChannel(0);
 
         distanceSensor.onDistanceChange = (distance) => {
             lastDistance = distance; // in cm
@@ -99,21 +99,32 @@ async function main() {
                 // --- STOP aufgrund Sonar ---
                 const stopDueToObstacle = distanceAvailable && lastDistance < minDistance && data.leftY > 0;
 
-                if (data.stop || stopDueToObstacle) {
-                    motorLeft.setTargetVelocity(0);
-                    motorRight.setTargetVelocity(0);
-                } else {
-                    const speedLeft  = clamp(data.leftY  || 0, -1, 1);
-                    const speedRight = clamp(data.rightY || 0, -1, 1);
+                let speedLeft  = clamp(data.leftY  || 0, -1, 1);
+                let speedRight = clamp(data.rightY || 0, -1, 1);
 
-                    motorLeft.setTargetVelocity(speedLeft);
-                    motorRight.setTargetVelocity(speedRight);
+                if (data.stop || stopDueToObstacle) {
+                    speedLeft = 0;
+                    speedRight = 0;
                 }
 
-                // --- Nachricht an Client (Distanz) ---
+                motorLeft.setTargetVelocity(speedLeft);
+                motorRight.setTargetVelocity(speedRight);
+
+                // --- Batterie auslesen (Motor-Spannung) ---
+                let batteryVoltage = 0;
+                try {
+                    const vLeft = await motorLeft.getVoltage();
+                    const vRight = await motorRight.getVoltage();
+                    batteryVoltage = (vLeft + vRight) / 2; // Mittelwert, da beide Motoren am gleichen Power-Port hängen
+                } catch (err) {
+                    console.warn('⚠️ Fehler beim Auslesen der Spannung:', err.message);
+                }
+
+                // --- Nachricht an Client (Distanz + Batterie) ---
                 if (ws.readyState === ws.OPEN) {
                     ws.send(JSON.stringify({
-                        distance: distanceAvailable ? lastDistance.toFixed(1) : null
+                        distance: distanceAvailable ? lastDistance.toFixed(1) : null,
+                        battery: batteryVoltage.toFixed(2)
                     }));
                 }
 

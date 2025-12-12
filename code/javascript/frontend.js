@@ -15,8 +15,9 @@ let lastBtnA = false;
 let lastBtnY = false;
 let lastBtnX = false;
 
-// --- DISTANCE SENSOR ---
+// --- DISTANCE & BATTERY ---
 let distance = null;
+let battery = null;
 const minDistanceBlock = 300; // mm
 const minDistanceSlow = 1000; // mm
 
@@ -30,7 +31,10 @@ ws.onmessage = (event) => {
   try {
     const data = JSON.parse(event.data);
     if (data.distance !== undefined && data.distance !== null) distance = parseFloat(data.distance);
-  } catch (err) { console.warn("⚠️ Fehler beim Verarbeiten der Server-Nachricht:", err); }
+    if (data.battery !== undefined && data.battery !== null) battery = parseFloat(data.battery);
+  } catch (err) {
+    console.warn("⚠️ Fehler beim Verarbeiten der Server-Nachricht:", err);
+  }
 }
 
 // --- GAMEPAD LOOP ---
@@ -103,7 +107,8 @@ function sendControllerData() {
   document.getElementById("stopState").textContent = `STOP: ${stopActive ? "ON" : "OFF"}`;
   document.getElementById("stickValues").textContent = `Drive: ${forward.toFixed(2)} | Steer: ${steer.toFixed(2)}`;
   document.getElementById("buttons").textContent = `Buttons: ${btnA ? "A " : ""}${btnY ? "Y " : ""}${btnX ? "X " : ""}`.trim();
-  document.getElementById("battery").textContent = distance !== null ? `Distanz: ${(distance/10).toFixed(1)} cm` : `Distanz: --`;
+  document.getElementById("distance").textContent = distance !== null ? `Distance: ${(distance/10).toFixed(1)} cm` : `Distance: --`;
+  document.getElementById("battery").textContent = battery !== null ? `Battery: ${battery.toFixed(2)} V` : `Battery: --`;
 
   requestAnimationFrame(sendControllerData);
 }
