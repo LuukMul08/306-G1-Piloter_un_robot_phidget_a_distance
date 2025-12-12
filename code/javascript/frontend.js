@@ -4,7 +4,7 @@ const ws = new WebSocket("ws://localhost:8080");
 // --- SPEED MODES ---
 let speedMode = 2;  // 1=30%, 2=60%, 3=100%
 const speedFactors = {1: 0.30, 2: 0.60, 3: 1.00};
-let speedLock = false;       // true wenn wir auf 30% fixieren
+let speedLock = false;
 let prevSpeedMode = speedMode;
 
 // --- STOP STATE ---
@@ -17,8 +17,8 @@ let lastBtnX = false;
 
 // --- DISTANCE SENSOR ---
 let distance = null;
-const minDistanceBlock = 300; // mm, unterhalb dessen Vorwärts blockiert wird
-const minDistanceSlow = 1000; // mm, ab hier Geschwindigkeit auf 30% fixiert
+const minDistanceBlock = 300;  // mm
+const minDistanceSlow = 1000;  // mm
 
 // --- CLAMP & DEADZONE ---
 function clamp(value, min, max) { return Math.max(min, Math.min(max, value)); }
@@ -30,8 +30,14 @@ ws.onmessage = (event) => {
   try {
     const data = JSON.parse(event.data);
     if (data.distance !== undefined && data.distance !== null) distance = parseFloat(data.distance);
-  } catch (err) { console.warn("⚠️ Fehler beim Verarbeiten der Server-Nachricht:", err); }
+  } catch (err) {
+    console.warn("⚠️ Fehler beim Verarbeiten der Server-Nachricht:", err);
+  }
 }
+
+// --- LETZTE MOTOR-WERTE (um unnötige Sends zu vermeiden) ---
+let lastLeftMotor = null;
+let lastRightMotor = null;
 
 // --- GAMEPAD LOOP ---
 function sendControllerData() {
@@ -53,7 +59,7 @@ function sendControllerData() {
   if (btnX && !lastBtnX) stopActive = !stopActive;
   lastBtnX = btnX;
 
-  // --- DISTANZ-LOGIK ---
+  // --- DISTANZ-LOGIK (SpeedLock) ---
   if (distance !== null) {
     if (distance < minDistanceSlow && distance >= minDistanceBlock) {
       if (!speedLock) { prevSpeedMode = speedMode; speedLock = true; }
@@ -75,10 +81,10 @@ function sendControllerData() {
   else if (btnLT > 0 && btnRT === 0) forward = -btnLT;
   else if (btnRT > 0 && btnLT > 0) forward = 0;
 
-  // --- Blockierung Vorwärts bei zu geringer Distanz ---
+  // --- Vorwärts blockieren bei zu geringer Distanz ---
   if (distance !== null && distance < minDistanceBlock && forward > 0) forward = 0;
 
-  // --- BUTTON SPEED CONTROL nur wenn nicht gesperrt ---
+  // --- BUTTON SPEED CONTROL ---
   if (!speedLock) {
     if (btnY && !lastBtnY) speedMode = Math.min(3, speedMode + 1);
     if (btnA && !lastBtnA) speedMode = Math.max(1, speedMode - 1);
@@ -91,14 +97,15 @@ function sendControllerData() {
   let rightMotor = clamp((forward - steer) * factor, -1, 1);
 
   // STOP überschreibt alles
-  if (stopActive) {
-    leftMotor = 0;
-    rightMotor = 0;
-  }
+  if (stopActive) { leftMotor = 0; rightMotor = 0; }
 
-  // --- SEND TO SERVER ---
+  // --- SEND TO SERVER NUR WENN SICH WERTE GEÄNDERT HABEN ---
   if (ws.readyState === WebSocket.OPEN) {
-    ws.send(JSON.stringify({ leftY: leftMotor, rightY: rightMotor, speedMode, stop: stopActive }));
+    if (leftMotor !== lastLeftMotor || rightMotor !== lastRightMotor) {
+      ws.send(JSON.stringify({ leftY: leftMotor, rightY: rightMotor, speedMode, stop: stopActive }));
+      lastLeftMotor = leftMotor;
+      lastRightMotor = rightMotor;
+    }
   }
 
   // --- UPDATE FRONTEND ---
