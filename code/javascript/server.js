@@ -75,31 +75,6 @@ async function main() {
         return Math.max(min, Math.min(max, v));
     }
 
-    // --- Virtuelle Batterie ---
-    const BATTERY_V = 9.6;
-    const BATTERY_CAPACITY_AH = 2;
-    const MOTOR_CURRENT_MAX = 2; // A pro Motor
-    const SONAR_CURRENT = 0.05;
-    let batteryPercent = 100;
-    let lastBatteryUpdate = Date.now();
-
-    function updateBatteryPercent(leftMotorSpeed, rightMotorSpeed) {
-        const now = Date.now();
-        const dt = (now - lastBatteryUpdate) / 1000; // Sekunden
-        lastBatteryUpdate = now;
-
-        const currentLeft = Math.abs(leftMotorSpeed) * MOTOR_CURRENT_MAX;
-        const currentRight = Math.abs(rightMotorSpeed) * MOTOR_CURRENT_MAX;
-        const totalCurrent = currentLeft + currentRight + SONAR_CURRENT;
-
-        const energyUsed = BATTERY_V * totalCurrent * (dt / 3600); // Wh
-        const batteryEnergy = BATTERY_V * BATTERY_CAPACITY_AH;      // Wh
-        const percentUsed = (energyUsed / batteryEnergy) * 100;
-
-        batteryPercent = Math.max(0, batteryPercent - percentUsed);
-        return batteryPercent;
-    }
-
     let lastUpdate = 0;
     const updateInterval = 50;
 
@@ -134,14 +109,10 @@ async function main() {
                 motorLeft.setTargetVelocity(speedLeft);
                 motorRight.setTargetVelocity(speedRight);
 
-                // --- Batterie simulieren ---
-                const battery = updateBatteryPercent(speedLeft, speedRight);
-
-                // --- Nachricht an Client (Distanz + Batterie) ---
+                // --- Nachricht an Client (nur Distanz) ---
                 if (ws.readyState === ws.OPEN) {
                     ws.send(JSON.stringify({
-                        distance: distanceAvailable ? lastDistance.toFixed(1) : null,
-                        battery: battery.toFixed(1)
+                        distance: distanceAvailable ? lastDistance.toFixed(1) : null
                     }));
                 }
 

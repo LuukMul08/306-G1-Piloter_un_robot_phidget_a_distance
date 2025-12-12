@@ -108,7 +108,6 @@ function sendControllerData() {
   document.getElementById("stickValues").textContent = `Drive: ${forward.toFixed(2)} | Steer: ${steer.toFixed(2)}`;
   document.getElementById("buttons").textContent = `Buttons: ${btnA ? "A " : ""}${btnY ? "Y " : ""}${btnX ? "X " : ""}`.trim();
   document.getElementById("distance").textContent = distance !== null ? `Distance: ${(distance/10).toFixed(1)} cm` : `Distance: --`;
-  document.getElementById("battery").textContent = battery !== null ? `Battery: ${battery.toFixed(2)} V` : `Battery: --`;
 
   requestAnimationFrame(sendControllerData);
 }
