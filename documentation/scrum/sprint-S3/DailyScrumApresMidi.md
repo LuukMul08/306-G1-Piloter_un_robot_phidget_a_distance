@@ -1,6 +1,6 @@
 # SCRUM : Daily scrum du ... 2025
 
-## Ce qui a été cet après-mid
+## Ce qui a été fait cet après-mid
 
 ### Andrei
 
