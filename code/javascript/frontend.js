@@ -15,7 +15,7 @@ let lastBtnX = false;
 
 // --- DISTANCE SENSOR ---
 let distance = null;
-const minDistance = 20; // cm, unterhalb dessen Vorwärts blockiert wird
+const minDistance = 200; // mm, unterhalb dessen Vorwärts konsequent blockiert wird
 
 // --- CLAMP FUNCTION ---
 function clamp(value, min, max) {
@@ -34,7 +34,7 @@ ws.onmessage = (event) => {
   try {
     const data = JSON.parse(event.data);
     if (data.distance !== undefined && data.distance !== null) {
-      distance = parseFloat(data.distance);
+      distance = parseFloat(data.distance); // jetzt in mm
     }
   } catch (err) {
     console.warn("⚠️ Fehler beim Verarbeiten der Server-Nachricht:", err);
@@ -84,9 +84,9 @@ function sendControllerData() {
   else if (btnLT > 0 && btnRT === 0) forward = -btnLT; // nur LT → rückwärts
   else if (btnRT > 0 && btnLT > 0) forward = 0;        // beide → stehen bleiben
 
-  // --- Sonar: blockiere Vorwärts, wenn zu nah an Wand ---
+  // --- Sonar: blockiere konsequent Vorwärts ---
   if (distance !== null && distance < minDistance && forward > 0) {
-    forward = 0;
+    forward = 0; // alles nach vorne blockieren
   }
 
   let leftMotor  = clamp((forward + stickRightX) * factor, -1, 1);
@@ -112,7 +112,7 @@ function sendControllerData() {
   document.getElementById("stopState").textContent = `STOP: ${stopActive ? "ON" : "OFF"}`;
   document.getElementById("stickValues").textContent = `Drive: ${forward.toFixed(2)} | Steer: ${stickRightX.toFixed(2)}`;
   document.getElementById("buttons").textContent = `Buttons: ${btnA ? "A " : ""}${btnB ? "B " : ""}${btnX ? "X " : ""}${btnY ? "Y " : ""}`.trim();
-  document.getElementById("battery").textContent = distance !== null ? `Distanz: ${distance.toFixed(1)} cm` : `Distanz: --`;
+  document.getElementById("battery").textContent = distance !== null ? `Distanz: ${(distance/10).toFixed(1)} cm` : `Distanz: --`;
 
   requestAnimationFrame(sendControllerData);
 }
