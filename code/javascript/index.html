@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <link rel="stylesheet" href="/code/javascript/styles.css">k
+<meta charset="UTF-8">
+<title>Rover Controller</title>
+<style>
+  body { font-family: sans-serif; text-align: center; background: #f0f0f0; }
+  h1 { margin-top: 20px; }
+  #status { margin: 10px; font-weight: bold; }
+  #instructions { margin-top: 20px; }
+</style>
+</head>
+<body>
+
+<h1>Contrôle du Rover</h1>
+<div id="status">⏳ Attente de la manette...</div>
+
+<div id="instructions">
+  <div>Stick gauche = Moteur gauche</div>
+  <div>Stick droit = Moteur droit</div>
+  <div>Appuie sur les sticks pour avancer/reculer</div>
+  <img src="/code/img/xbox.jpg" alt="">
+</div>
+
+<script>
+const status = document.getElementById("status");
+const ws = new WebSocket("ws://localhost:8080"); // Node.js backend
+
+ws.onopen = () => console.log("✅ WebSocket connecté");
+
+function sendControllerData() {
+  const gp = navigator.getGamepads()[0];
+  if (!gp) {
+    status.textContent = "⏳ Attente de la manette...";
+    requestAnimationFrame(sendControllerData);
+    return;
+  }
+
+  status.textContent = `🎮 Manette connectée: ${gp.id}`;
+
+  // Envoyer uniquement les axes gauche/droite au backend
+  const data = {
+    leftY: gp.axes[1],   // Stick gauche vertical
+    rightY: gp.axes[3]   // Stick droit vertical
+  };
+
+  if (ws.readyState === WebSocket.OPEN) {
+    ws.send(JSON.stringify(data));
+  }
+
+  requestAnimationFrame(sendControllerData);
+}
+
+// Démarrer la boucle
+sendControllerData();
+</script>
+
+</body>
+</html>
