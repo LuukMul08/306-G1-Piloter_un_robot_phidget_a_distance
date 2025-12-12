@@ -8,6 +8,9 @@ const speedFactors = {1: 0.30, 2: 0.60, 3: 1.00};
 // --- STOP STATE ---
 let stopActive = false;
 
+// --- BATTERY ---
+let battery = 0;
+
 // --- CLAMP FUNCTION ---
 function clamp(value, min, max) {
   return Math.max(min, Math.min(max, value));
@@ -18,8 +21,17 @@ function applyDeadzone(v, dz = 0.12) {
   return (v === undefined || Math.abs(v) < dz) ? 0 : v;
 }
 
-// --- WEBSOCKET CONNECTED ---
+// --- WEBSOCKET EVENTS ---
 ws.onopen = () => console.log("✅ WebSocket connected");
+
+ws.onmessage = (event) => {
+  try {
+    const data = JSON.parse(event.data);
+    if (data.battery !== undefined) battery = data.battery.toFixed(2);
+  } catch (err) {
+    console.warn("⚠️ Fehler beim Verarbeiten der Server-Nachricht:", err);
+  }
+};
 
 // --- GAMEPAD LOOP ---
 function sendControllerData() {
@@ -82,6 +94,7 @@ function sendControllerData() {
   document.getElementById("stopState").textContent = `STOP: ${stopActive ? "ON" : "OFF"}`;
   document.getElementById("stickValues").textContent = `Drive: ${stickLeftY.toFixed(2)} | Steer: ${stickRightX.toFixed(2)}`;
   document.getElementById("buttons").textContent = `Buttons: ${btnA ? "A " : ""}${btnB ? "B " : ""}${btnX ? "X " : ""}${btnY ? "Y " : ""}`.trim();
+  document.getElementById("battery").textContent = `Battery: ${battery} V`;
 
   requestAnimationFrame(sendControllerData);
 }

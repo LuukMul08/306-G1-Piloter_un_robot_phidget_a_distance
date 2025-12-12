@@ -41,13 +41,32 @@ async function main() {
     process.exit(1);
   }
 
+  // --- Batterie-Sensor konfigurieren ---
+  const batterySensor = new phidget22.VoltageInput();
+  batterySensor.setIsRemote(true);
+  batterySensor.setDeviceSerialNumber(667784);
+  batterySensor.setHubPort(1); // Port des Batterie-Sensors
+  try {
+    await batterySensor.open(10000);
+    console.log('✅ Batteriesensor bereit');
+  } catch (err) {
+    console.error('❌ Fehler beim Öffnen des Batteriesensors:', err);
+    process.exit(1);
+  }
+
   // --- CTRL+C ---
   process.on('SIGINT', async () => {
-    console.log('🛑 Motoren herunterfahren...');
+    console.log('🛑 Motoren und Sensoren herunterfahren...');
     await motorLeft.close();
     await motorRight.close();
+    await batterySensor.close();
     process.exit();
   });
+
+  // --- Hilfsfunktion zum Clampen ---
+  function clamp(value, min, max) {
+    return Math.max(min, Math.min(max, value));
+  }
 
   // --- Update-Limit ---
   let lastUpdate = 0;
@@ -64,7 +83,7 @@ async function main() {
       motorRight.setTargetVelocity(0);
     });
 
-    ws.on('message', message => {
+    ws.on('message', async message => {
       const now = Date.now();
       if (now - lastUpdate < updateInterval) return;
       lastUpdate = now;
@@ -72,25 +91,33 @@ async function main() {
       try {
         const data = JSON.parse(message.toString());
 
-        // Erwartete Werte vom Client:
-        // leftY, rightY = Mischwerte (Auto-Drive)
-        // stop = true/false
-        // speedMode = 1/2/3 (nur Info)
-
+        // --- Nothalt ---
         if (data.stop === true) {
-          // Sofortiger Nothalt
           motorLeft.setTargetVelocity(0);
           motorRight.setTargetVelocity(0);
           return;
         }
 
-        // Werte direkt übernehmen (Client macht das Mixing)
-        let speedLeft = data.leftY || 0;
-        let speedRight = data.rightY || 0;
+        // --- Motorwerte clampen ---
+        const speedLeft = clamp(data.leftY || 0, -1, 1);
+        const speedRight = clamp(data.rightY || 0, -1, 1);
 
-        // Phidgets-Motoren laufen invertiert, daher:
-        motorLeft.setTargetVelocity(-speedLeft);
-        motorRight.setTargetVelocity(-speedRight);
+        // --- Motoren setzen ---
+        motorLeft.setTargetVelocity(speedLeft);
+        motorRight.setTargetVelocity(speedRight);
+
+        // --- Batterie auslesen ---
+        let batteryVoltage = 0;
+        try {
+          batteryVoltage = await batterySensor.getVoltage();
+        } catch (err) {
+          console.warn('⚠️ Fehler beim Auslesen des Batteriestands:', err);
+        }
+
+        // --- Daten an Client zurücksenden ---
+        if (ws.readyState === ws.OPEN) {
+          ws.send(JSON.stringify({ battery: batteryVoltage }));
+        }
 
       } catch (err) {
         console.error('❌ Fehler beim Verarbeiten der WS-Nachricht:', err);
