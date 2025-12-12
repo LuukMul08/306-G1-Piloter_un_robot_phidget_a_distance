@@ -3,33 +3,29 @@ import * as phidget22 from 'phidget22';
 import { WebSocketServer } from 'ws';
 
 async function main() {
-  // --- WebSocket ---
   const wss = new WebSocketServer({ port: 8080 });
   console.log('✅ WebSocket Server gestartet auf ws://localhost:8080');
 
-  // --- Hub Verbindung ---
+  // Phidget‑Hub Verbindung
   const hubIP = '10.18.1.126';
   const conn = new phidget22.NetworkConnection(5661, hubIP);
-
   try {
     await conn.connect();
     console.log(`✅ Verbunden mit dem Hub ${hubIP}`);
   } catch (err) {
-    console.error('❌ Fehler bei der Hub-Verbindung:', err);
+    console.error('❌ Fehler bei der Hub‑Verbindung:', err);
     process.exit(1);
   }
 
-  // --- Motoren konfigurieren ---
+  // Motoren konfigurieren
   const motorLeft = new phidget22.DCMotor();
   motorLeft.setIsRemote(true);
   motorLeft.setDeviceSerialNumber(667784);
-  motorLeft.setHubPort(0);
   motorLeft.setChannel(0);
 
   const motorRight = new phidget22.DCMotor();
   motorRight.setIsRemote(true);
   motorRight.setDeviceSerialNumber(667784);
-  motorRight.setHubPort(0);
   motorRight.setChannel(1);
 
   try {
@@ -41,42 +37,41 @@ async function main() {
     process.exit(1);
   }
 
-  // --- Batterie-Sensor konfigurieren ---
+  // Batt sensor (VoltageInput)
   const batterySensor = new phidget22.VoltageInput();
   batterySensor.setIsRemote(true);
   batterySensor.setDeviceSerialNumber(667784);
-  batterySensor.setHubPort(1); // Port des Batterie-Sensors
+
+  // ⚠️ Hier nur Channel statt HubPort
+  batterySensor.setChannel(2); // Beispiel: Anschluss an Kanal 2
+
   try {
     await batterySensor.open(10000);
-    console.log('✅ Batteriesensor bereit');
+    console.log('✅ Batteriesensor bereit (VoltageInput)');
   } catch (err) {
-    console.error('❌ Fehler beim Öffnen des Batteriesensors:', err);
-    process.exit(1);
+    console.error('⚠️ Keine Batterie‑Messung: VoltInput nicht gefunden oder Kanal falsch', err);
   }
 
-  // --- CTRL+C ---
+  // CTRL+C Cleanup
   process.on('SIGINT', async () => {
     console.log('🛑 Motoren und Sensoren herunterfahren...');
     await motorLeft.close();
     await motorRight.close();
-    await batterySensor.close();
+    try { await batterySensor.close(); } catch {}
     process.exit();
   });
 
-  // --- Hilfsfunktion zum Clampen ---
-  function clamp(value, min, max) {
-    return Math.max(min, Math.min(max, value));
+  // clamp‑Helper
+  function clamp(v, min, max) {
+    return Math.max(min, Math.min(max, v));
   }
 
-  // --- Update-Limit ---
   let lastUpdate = 0;
-  const updateInterval = 50; // 20 Hz
+  const updateInterval = 50;
 
-  // --- WebSocket Events ---
   wss.on('connection', ws => {
     console.log('🔗 WebSocket Client verbunden');
 
-    // Bei Verbindungsverlust → Motoren stoppen
     ws.on('close', () => {
       console.log('❌ Client getrennt → Motoren stoppen');
       motorLeft.setTargetVelocity(0);
@@ -91,40 +86,35 @@ async function main() {
       try {
         const data = JSON.parse(message.toString());
 
-        // --- Nothalt ---
-        if (data.stop === true) {
+        // Stop
+        if (data.stop) {
           motorLeft.setTargetVelocity(0);
           motorRight.setTargetVelocity(0);
-          return;
+        } else {
+          const speedLeft  = clamp(data.leftY  || 0, -1, 1);
+          const speedRight = clamp(data.rightY || 0, -1, 1);
+
+          motorLeft.setTargetVelocity(speedLeft);
+          motorRight.setTargetVelocity(speedRight);
         }
 
-        // --- Motorwerte clampen ---
-        const speedLeft = clamp(data.leftY || 0, -1, 1);
-        const speedRight = clamp(data.rightY || 0, -1, 1);
-
-        // --- Motoren setzen ---
-        motorLeft.setTargetVelocity(speedLeft);
-        motorRight.setTargetVelocity(speedRight);
-
-        // --- Batterie auslesen ---
-        let batteryVoltage = 0;
+        // Battery reading
+        let batteryVoltage = null;
         try {
-          batteryVoltage = await batterySensor.getVoltage();
+          batteryVoltage = batterySensor.getVoltage();
         } catch (err) {
-          console.warn('⚠️ Fehler beim Auslesen des Batteriestands:', err);
+          // Sensor vielleicht nicht vorhanden
         }
 
-        // --- Daten an Client zurücksenden ---
         if (ws.readyState === ws.OPEN) {
           ws.send(JSON.stringify({ battery: batteryVoltage }));
         }
 
       } catch (err) {
-        console.error('❌ Fehler beim Verarbeiten der WS-Nachricht:', err);
+        console.error('❌ Fehler beim Verarbeiten der WS‑Nachricht:', err);
       }
     });
   });
 }
 
-// --- Server starten ---
 main();
