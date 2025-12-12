@@ -4,6 +4,7 @@ const ws = new WebSocket("ws://localhost:8080");
 // --- SPEED MODES ---
 let speedMode = 2;  // 1=30%, 2=60%, 3=100%
 const speedFactors = {1: 0.30, 2: 0.60, 3: 1.00};
+let speedLock = false; // true wenn wir auf 30% fixieren
 
 // --- STOP STATE ---
 let stopActive = false;
@@ -15,7 +16,8 @@ let lastBtnX = false;
 
 // --- DISTANCE SENSOR ---
 let distance = null;
-const minDistance = 200; // mm, unterhalb dessen Vorwärts konsequent blockiert wird
+const minDistanceBlock = 300; // mm, unterhalb dessen Vorwärts blockiert wird
+const minDistanceSlow = 1000; // mm, ab hier Geschwindigkeit auf 30% fixiert
 
 // --- CLAMP FUNCTION ---
 function clamp(value, min, max) {
@@ -34,7 +36,7 @@ ws.onmessage = (event) => {
   try {
     const data = JSON.parse(event.data);
     if (data.distance !== undefined && data.distance !== null) {
-      distance = parseFloat(data.distance); // jetzt in mm
+      distance = parseFloat(data.distance); // in mm
     }
   } catch (err) {
     console.warn("⚠️ Fehler beim Verarbeiten der Server-Nachricht:", err);
@@ -65,10 +67,18 @@ function sendControllerData() {
   lastBtnX = btnX;
 
   // --- SPEED CONTROL (Debounce) ---
-  if (btnY && !lastBtnY) speedMode = Math.min(3, speedMode + 1);
-  if (btnA && !lastBtnA) speedMode = Math.max(1, speedMode - 1);
+  if (btnY && !lastBtnY && !speedLock) speedMode = Math.min(3, speedMode + 1);
+  if (btnA && !lastBtnA && !speedLock) speedMode = Math.max(1, speedMode - 1);
   lastBtnA = btnA;
   lastBtnY = btnY;
+
+  // --- Speed Lock aufgrund Distanz ---
+  if (distance !== null && distance < minDistanceSlow && distance >= minDistanceBlock) {
+    speedLock = true;
+    speedMode = 1; // fix auf 30%
+  } else if (distance === null || distance >= minDistanceSlow) {
+    speedLock = false; // wieder normale Geschwindigkeit
+  }
 
   const factor = speedFactors[speedMode];
 
@@ -84,9 +94,9 @@ function sendControllerData() {
   else if (btnLT > 0 && btnRT === 0) forward = -btnLT; // nur LT → rückwärts
   else if (btnRT > 0 && btnLT > 0) forward = 0;        // beide → stehen bleiben
 
-  // --- Sonar: blockiere konsequent Vorwärts ---
-  if (distance !== null && distance < minDistance && forward > 0) {
-    forward = 0; // alles nach vorne blockieren
+  // --- Sonar: blockiere konsequent Vorwärts unter minDistanceBlock ---
+  if (distance !== null && distance < minDistanceBlock && forward > 0) {
+    forward = 0;
   }
 
   let leftMotor  = clamp((forward + stickRightX) * factor, -1, 1);
@@ -108,7 +118,7 @@ function sendControllerData() {
   if (ws.readyState === WebSocket.OPEN) ws.send(JSON.stringify(data));
 
   // --- UPDATE FRONTEND ---
-  document.getElementById("speedMode").textContent = `Vitesse: ${speedMode} (${Math.round(factor*100)}%)`;
+  document.getElementById("speedMode").textContent = `Vitesse: ${speedMode} (${Math.round(factor*100)}%)${speedLock ? ' 🔒' : ''}`;
   document.getElementById("stopState").textContent = `STOP: ${stopActive ? "ON" : "OFF"}`;
   document.getElementById("stickValues").textContent = `Drive: ${forward.toFixed(2)} | Steer: ${stickRightX.toFixed(2)}`;
   document.getElementById("buttons").textContent = `Buttons: ${btnA ? "A " : ""}${btnB ? "B " : ""}${btnX ? "X " : ""}${btnY ? "Y " : ""}`.trim();
