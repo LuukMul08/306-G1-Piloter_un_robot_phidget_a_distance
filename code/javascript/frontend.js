@@ -13,6 +13,10 @@ let lastBtnA = false;
 let lastBtnY = false;
 let lastBtnX = false;
 
+// --- DISTANCE SENSOR ---
+let distance = null;
+const minDistance = 20; // cm, unterhalb dessen Vorwärts blockiert wird
+
 // --- CLAMP FUNCTION ---
 function clamp(value, min, max) {
   return Math.max(min, Math.min(max, value));
@@ -25,6 +29,17 @@ function applyDeadzone(v, dz = 0.12) {
 
 // --- WEBSOCKET EVENTS ---
 ws.onopen = () => console.log("✅ WebSocket connected");
+
+ws.onmessage = (event) => {
+  try {
+    const data = JSON.parse(event.data);
+    if (data.distance !== undefined && data.distance !== null) {
+      distance = parseFloat(data.distance);
+    }
+  } catch (err) {
+    console.warn("⚠️ Fehler beim Verarbeiten der Server-Nachricht:", err);
+  }
+};
 
 // --- GAMEPAD LOOP ---
 function sendControllerData() {
@@ -69,6 +84,11 @@ function sendControllerData() {
   else if (btnLT > 0 && btnRT === 0) forward = -btnLT; // nur LT → rückwärts
   else if (btnRT > 0 && btnLT > 0) forward = 0;        // beide → stehen bleiben
 
+  // --- Sonar: blockiere Vorwärts, wenn zu nah an Wand ---
+  if (distance !== null && distance < minDistance && forward > 0) {
+    forward = 0;
+  }
+
   let leftMotor  = clamp((forward + stickRightX) * factor, -1, 1);
   let rightMotor = clamp((forward - stickRightX) * factor, -1, 1);
 
@@ -92,6 +112,7 @@ function sendControllerData() {
   document.getElementById("stopState").textContent = `STOP: ${stopActive ? "ON" : "OFF"}`;
   document.getElementById("stickValues").textContent = `Drive: ${forward.toFixed(2)} | Steer: ${stickRightX.toFixed(2)}`;
   document.getElementById("buttons").textContent = `Buttons: ${btnA ? "A " : ""}${btnB ? "B " : ""}${btnX ? "X " : ""}${btnY ? "Y " : ""}`.trim();
+  document.getElementById("battery").textContent = distance !== null ? `Distanz: ${distance.toFixed(1)} cm` : `Distanz: --`;
 
   requestAnimationFrame(sendControllerData);
 }

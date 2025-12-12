@@ -37,11 +37,37 @@ async function main() {
         process.exit(1);
     }
 
+    // --- Sonar / Distanzsensor (optional) ---
+    let distanceSensor;
+    let distanceAvailable = false;
+    let lastDistance = 100; // initial sehr weit weg
+    const minDistance = 20; // Abstand in cm, unterhalb dessen gestoppt wird
+
+    try {
+        distanceSensor = new phidget22.DistanceSensor();
+        distanceSensor.setIsRemote(true);
+        distanceSensor.setDeviceSerialNumber(667784);
+        distanceSensor.setChannel(3); // Beispiel: Kanal 3
+
+        distanceSensor.onDistanceChange = (distance) => {
+            lastDistance = distance; // in cm
+        };
+
+        await distanceSensor.open(5000);
+        distanceAvailable = true;
+        console.log('✅ Distanzsensor bereit (optional)');
+    } catch (err) {
+        console.warn('⚠️ Distanzsensor optional: Sensor nicht gefunden oder Kanal falsch', err.message);
+    }
+
     // --- CTRL+C Cleanup ---
     process.on('SIGINT', async () => {
         console.log('🛑 Motoren herunterfahren...');
         await motorLeft.close();
         await motorRight.close();
+        if (distanceAvailable) {
+            try { await distanceSensor.close(); } catch {}
+        }
         process.exit();
     });
 
@@ -70,8 +96,10 @@ async function main() {
             try {
                 const data = JSON.parse(message.toString());
 
-                // --- STOP ---
-                if (data.stop) {
+                // --- STOP aufgrund Sonar ---
+                const stopDueToObstacle = distanceAvailable && lastDistance < minDistance;
+
+                if (data.stop || stopDueToObstacle) {
                     motorLeft.setTargetVelocity(0);
                     motorRight.setTargetVelocity(0);
                 } else {
@@ -82,9 +110,11 @@ async function main() {
                     motorRight.setTargetVelocity(speedRight);
                 }
 
-                // --- Nachricht an Client (ohne Batterie) ---
+                // --- Nachricht an Client (optional Distanz) ---
                 if (ws.readyState === ws.OPEN) {
-                    ws.send(JSON.stringify({}));
+                    ws.send(JSON.stringify({
+                        distance: distanceAvailable ? lastDistance.toFixed(1) : null
+                    }));
                 }
 
             } catch (err) {
