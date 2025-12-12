@@ -69,8 +69,8 @@ async function main() {
         const maxSpeed = 1;
 
         // Contrôle moteurs uniquement
-        const speedLeft = Math.abs(data.leftY) > deadzone ? -data.leftY * maxSpeed : 0;
-        const speedRight = Math.abs(data.rightY) > deadzone ? -data.rightY * maxSpeed : 0;
+        const speedLeft = Math.abs(data.leftY) > deadzone ? data.leftY * maxSpeed : 0;
+        const speedRight = Math.abs(data.rightY) > deadzone ? data.rightY * maxSpeed : 0;
 
         motorLeft.setTargetVelocity(speedLeft);
         motorRight.setTargetVelocity(speedRight);
