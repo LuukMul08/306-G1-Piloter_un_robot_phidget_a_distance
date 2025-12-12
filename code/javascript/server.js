@@ -1,3 +1,4 @@
+// server.mjs
 import * as phidget22 from 'phidget22';
 import { WebSocketServer } from 'ws';
 
@@ -36,25 +37,11 @@ async function main() {
         process.exit(1);
     }
 
-    // --- Batteriesensor als VoltageRatioInput ---
-    const batterySensor = new phidget22.VoltageRatioInput();
-    batterySensor.setIsRemote(true);
-    batterySensor.setDeviceSerialNumber(667784);
-    batterySensor.setChannel(2); // Kanal prüfen!
-
-    try {
-        await batterySensor.open(10000);
-        console.log('✅ Batteriesensor bereit (VoltageRatioInput)');
-    } catch (err) {
-        console.error('⚠️ Keine Batterie-Messung möglich: Sensor nicht gefunden oder Kanal falsch', err);
-    }
-
     // --- CTRL+C Cleanup ---
     process.on('SIGINT', async () => {
-        console.log('🛑 Motoren und Sensoren herunterfahren...');
+        console.log('🛑 Motoren herunterfahren...');
         await motorLeft.close();
         await motorRight.close();
-        try { await batterySensor.close(); } catch {}
         process.exit();
     });
 
@@ -95,17 +82,10 @@ async function main() {
                     motorRight.setTargetVelocity(speedRight);
                 }
 
-                // --- Batterie lesen ---
-                let batteryVoltage = null;
-                try {
-                    const ratio = await batterySensor.getVoltageRatio();
-                    batteryVoltage = ratio * 12; // 0–1 -> 0–12V (anpassen an dein Modul)
-                } catch (err) {
-                    // Sensor eventuell nicht verfügbar
-                }
-
+                // --- Keine Batterie ---
+                // Einfach die Nachricht ohne battery senden
                 if (ws.readyState === ws.OPEN) {
-                    ws.send(JSON.stringify({ battery: batteryVoltage }));
+                    ws.send(JSON.stringify({}));
                 }
 
             } catch (err) {
