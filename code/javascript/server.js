@@ -95,16 +95,12 @@ async function main() {
             try {
                 const data = JSON.parse(message.toString());
 
-                // --- STOP aufgrund Sonar ---
-                const stopDueToObstacle = distanceAvailable && lastDistance < minDistance && data.leftY > 0;
+        const deadzone = 0.15;
+        const maxSpeed = 1;
 
-                let speedLeft  = clamp(data.leftY  || 0, -1, 1);
-                let speedRight = clamp(data.rightY || 0, -1, 1);
-
-                if (data.stop || stopDueToObstacle) {
-                    speedLeft = 0;
-                    speedRight = 0;
-                }
+        // Contrôle moteurs uniquement
+        const speedLeft = Math.abs(data.leftY) > deadzone ? data.leftY * maxSpeed : 0;
+        const speedRight = Math.abs(data.rightY) > deadzone ? data.rightY * maxSpeed : 0;
 
                 motorLeft.setTargetVelocity(speedLeft);
                 motorRight.setTargetVelocity(speedRight);
