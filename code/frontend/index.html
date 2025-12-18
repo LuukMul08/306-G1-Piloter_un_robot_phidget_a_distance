@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<title>Rover Controller</title>
+<link rel="stylesheet" href="/code/javascript/styles.css">
+<style>
+  body { font-family: sans-serif; text-align: center; background: #f0f0f0; }
+  h1 { margin-top: 20px; }
+  #status { margin: 10px; font-weight: bold; }
+  #controls { margin-top: 20px; display: inline-block; text-align: left; }
+  .control { margin-bottom: 5px; }
+</style>
+</head>
+<body>
+
+<h1>Contrôle du Rover</h1>
+<div id="status">⏳ Attente de la manette...</div>
+
+<div id="controls">
+  <div class="control" id="speedMode">Vitesse: --</div>
+  <div class="control" id="stopState">STOP: --</div>
+  <div class="control" id="stickValues">Drive: -- | Steer: --</div>
+  <div class="control" id="buttons">Buttons: --</div>
+  <div class="control" id="distance">Distance: -- </div>
+</div>
+
+
+<!-- JavaScript -->
+<script src="/code/javascript/frontend.js"></script>
+
+</body>
+</html>

@@ -4,16 +4,10 @@
 
 ### Andrei
 
-- 
+
 
 ### Luuk
 
-- 
-
 ### Théo
 
-- 
-
 ## Problèmes rencontrés
-
-- 
