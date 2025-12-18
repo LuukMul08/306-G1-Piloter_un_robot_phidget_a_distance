@@ -54,22 +54,19 @@ Chaque membre participe activement à la conception, au développement et à la 
 
 Vous pouvez ajouter ici les noms des membres :
 
-* Membre 1
-* Membre 2
-* Membre 3
-* Membre 4
-
+* Luuk Müller
+* Théo Pasquier
+* Andrei Pires Donose
 ---
 
 ## 🛠️ Technologies et outils utilisés
 
 Liste des technologies, frameworks et outils utilisés pour développer et documenter le projet. Par exemple :
 
-* Langage(s) : …
+* Langage(s) : Javascript
 * Framework(s) : …
 * Outils de gestion de versions : GitHub
 * Gestion de projet : Planning, journal, réunions
-* Autres outils : …
 
 ---
 
