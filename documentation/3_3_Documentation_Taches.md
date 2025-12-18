@@ -1,21 +1,31 @@
-# Documentation des Tâches
+# Documentation des Tâches – In Review
 
-## Etablir une connexion avec la manette XBOX
+## Établir une connexion avec la manette XBOX
 > Cette tâche consiste à faire le lien entre la manette Xbox et l’application afin de permettre au robot d’exécuter des actions.
 
-## Développer les déplacements du robot à l'aide de la manette XBOX
-> L'objectif de cette tâche est de pouvoir déplacer le robot grâce aux inputs que l'on fait avec la manette de XBOX.
-
 ## Interpréter les inputs de la manette XBOX
-> Le but principal ici est de pouvoir récupérer les actions faites avec la manette de XBOX.
+> Le but principal ici est de pouvoir récupérer et interpréter les différentes actions effectuées avec la manette Xbox (boutons, joysticks, gâchettes) afin de les exploiter dans l’application.
 
-## Implémenter le bouton d'arrêt d'urgence
-> Cette tâche permet de créer et implémenter un bouton qui, à son activation, arrête toute commande venant de la manette de XBOX.
+## Implémentation du bouton d'arrêt d'urgence
+> Cette tâche permet de créer et d’implémenter un bouton d’arrêt d’urgence qui, lorsqu’il est activé, stoppe immédiatement toutes les commandes envoyées au robot.
+
+## Développer les déplacements du robot à l'aide de la manette XBOX
+> L’objectif de cette tâche est de permettre le déplacement du robot à l’aide de la manette Xbox en traduisant les inputs utilisateur en commandes de mouvement.
+
+## Implémentation de la lecture de distance
+> Cette tâche consiste à récupérer et traiter les données de distance mesurées par le robot afin de les rendre exploitables par l’application.
 
 ## Fonctionnalité vitesse réglable
-> Cette fonctionnalité permet à l'utilisateur du robot de modifier la vitesse de ce-dernier entre : lent (30%), moyen (60%), rapide (100%).
+> Cette fonctionnalité permet à l’utilisateur de modifier la vitesse du robot selon trois niveaux prédéfinis :  
+> - Lent (30 %)  
+> - Moyen (60 %)  
+> - Rapide (100 %)
 
-## Développement d'une page d'aide
-> L'objectif de cette tâche est de créer une page qui permet d'indiquer à l'utilisateur comment utiliser les boutons de la manette pour intéragir avec le robot. Ceci est mode d'emploi du robot.
+## Afficher la distance du robot
+> L’objectif de cette tâche est d’afficher en temps réel la distance mesurée par le robot afin d’informer l’utilisateur de son environnement immédiat.
 
-##
+## Afficher le réglage de la vitesse
+> Cette tâche vise à afficher clairement la vitesse actuellement sélectionnée du robot pour permettre à l’utilisateur de savoir à tout moment à quelle allure il se déplace.
+
+## Afficher le bouton d'arrêt d'urgence
+> Cette tâche consiste à afficher visuellement le bouton d’arrêt d’urgence dans l’interface utilisateur afin qu’il soit facilement accessible en cas de besoin.
