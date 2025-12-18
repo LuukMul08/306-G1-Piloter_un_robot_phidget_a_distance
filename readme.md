@@ -75,7 +75,7 @@ Liste des technologies, frameworks et outils utilisés pour développer et docum
 Explique comment lancer l’application. Par exemple :
 
 ```bash
-git clone <url-du-repository>
+git clone https://github.com/LuukMul08/306-G1-Piloter_un_robot_phidget_a_distance.git
 cd code
 # puis lancez l'application suivant la technologie utilisée
 ```
