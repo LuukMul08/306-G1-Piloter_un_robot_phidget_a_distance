@@ -1,0 +1,191 @@
+/* --- GLOBAL STYLES --- */
+body {
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background-color: #121212;
+  color: #eee;
+  margin: 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+}
+
+/* --- HEADINGS --- */
+h1, h2 {
+  text-align: center;
+  margin-bottom: 10px;
+  color: #00ffcc; /* hellgrün für Auswahl-Stil */
+}
+
+h1 {
+  font-size: 28px;
+  margin-bottom: 25px;
+}
+
+h2 {
+  font-size: 20px;
+  margin-bottom: 15px;
+}
+
+/* --- STATUS --- */
+#status {
+  font-size: 18px;
+  font-weight: bold;
+  text-align: center;
+  margin-bottom: 20px;
+  padding: 12px 20px;
+  background-color: #1e1e1e;
+  border-radius: 12px;
+  box-shadow: 0 0 15px rgba(0,255,204,0.3);
+  border: 1px solid #00ffcc;
+}
+
+/* --- CONTROLS --- */
+#controls {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 20px;
+  margin-bottom: 20px;
+}
+
+.control {
+  background-color: #1e1e1e;
+  border: 1px solid #333;
+  border-radius: 12px;
+  padding: 15px 20px;
+  min-width: 180px;
+  text-align: center;
+  font-size: 16px;
+  box-shadow: 0 0 10px rgba(0,255,204,0.2);
+  color: #eee;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.control:hover {
+  transform: scale(1.03);
+  box-shadow: 0 0 15px rgba(0,255,204,0.4);
+}
+
+/* --- JOYSTICKS & TRIGGERS --- */
+#joysticks {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 50px;
+}
+
+.joystick-wrapper, .trigger-wrapper, .buttons-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: 15px;
+}
+
+/* --- JOYSTICKS --- */
+.joystick {
+  position: relative;
+  width: 120px;
+  height: 120px;
+  background-color: #1e1e1e;
+  border: 2px solid #00ffcc;
+  border-radius: 50%;
+  margin: 15px 0;
+  overflow: hidden;
+  box-shadow: 0 0 10px rgba(0,255,204,0.3);
+}
+
+.joystick-inner {
+  position: absolute;
+  width: 25px;
+  height: 25px;
+  background-color: #00ffcc;
+  border-radius: 50%;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  transition: transform 0.05s;
+}
+
+/* --- STICK VALUES --- */
+.stick-values {
+  font-size: 14px;
+  color: #aaa;
+}
+
+/* --- BUTTONS --- */
+.buttons-wrapper {
+  display: grid;
+  grid-template-columns: repeat(2, 60px);
+  gap: 12px;
+  justify-content: center;
+  margin-top: 15px;
+}
+
+.button {
+  width: 60px;
+  height: 60px;
+  background-color: #1e1e1e;
+  border: 2px solid #00ffcc;
+  border-radius: 12px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  color: #ccc;
+  font-weight: bold;
+  font-size: 18px;
+  transition: all 0.15s;
+  user-select: none;
+}
+
+.button.pressed {
+  background-color: #00ffcc;
+  color: #121212;
+  transform: scale(1.1);
+  box-shadow: 0 0 15px #00ffcc;
+}
+
+/* --- TRIGGERS --- */
+.trigger-wrapper div {
+  margin: 5px 0;
+  font-size: 14px;
+  color: #ccc;
+}
+
+/* --- LOGS --- */
+#logs {
+  background-color: #1e1e1e;
+  color: #0f0;
+  padding: 12px;
+  height: 220px;
+  overflow-y: auto;
+  font-family: monospace;
+  font-size: 13px;
+  border-radius: 12px;
+  box-shadow: inset 0 0 10px rgba(0,255,204,0.2);
+  border: 1px solid #00ffcc;
+}
+
+/* --- HELP BUTTON --- */
+#helpBtn {
+  display: block;
+  margin: 25px auto 0 auto;
+  padding: 12px 25px;
+  font-size: 16px;
+  font-weight: bold;
+  background-color: #007bff;
+  color: #fff;
+  border: none;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: background-color 0.2s, transform 0.1s;
+}
+
+#helpBtn:hover {
+  background-color: #0056b3;
+  transform: scale(1.05);
+}
+
+#helpBtn:active {
+  transform: scale(0.98);
+}
