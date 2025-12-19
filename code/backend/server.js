@@ -5,9 +5,10 @@ async function main() {
     const wss = new WebSocketServer({ port: 8080 });
     console.log('✅ WebSocket Server gestartet auf ws://localhost:8080');
 
-    // --- Phidget Hub ---
+    // --- Phidget Hub --- 
     const hubIP = '10.18.1.126';
     const conn = new phidget22.NetworkConnection(5661, hubIP);
+
     try {
         await conn.connect();
         console.log(`✅ Verbunden mit Hub ${hubIP}`);
@@ -36,11 +37,10 @@ async function main() {
         process.exit(1);
     }
 
-    // --- Sonar / Distanzsensor ---
+    // --- Distanzsensor optional ---
     let distanceSensor;
     let distanceAvailable = false;
     let lastDistance = 100; // initial sehr weit weg
-    const minDistance = 20; // cm
 
     try {
         distanceSensor = new phidget22.DistanceSensor();
@@ -56,24 +56,20 @@ async function main() {
         distanceAvailable = true;
         console.log('✅ Distanzsensor bereit');
     } catch (err) {
-        console.warn('⚠️ Distanzsensor optional: Sensor nicht gefunden oder Kanal falsch', err.message);
+        console.warn('⚠️ Distanzsensor optional: Sensor nicht gefunden oder Kanal falsch');
     }
 
     // --- CTRL+C Cleanup ---
     process.on('SIGINT', async () => {
         console.log('🛑 Motoren herunterfahren...');
-        await motorLeft.close();
-        await motorRight.close();
-        if (distanceAvailable) {
-            try { await distanceSensor.close(); } catch {}
-        }
+        try { await motorLeft.close(); } catch {}
+        try { await motorRight.close(); } catch {}
+        if (distanceAvailable) { try { await distanceSensor.close(); } catch {} }
         process.exit();
     });
 
     // --- Helper ---
-    function clamp(v, min, max) {
-        return Math.max(min, Math.min(max, v));
-    }
+    function clamp(v, min, max) { return Math.max(min, Math.min(max, v)); }
 
     let lastUpdate = 0;
     const updateInterval = 50;
@@ -95,23 +91,21 @@ async function main() {
             try {
                 const data = JSON.parse(message.toString());
 
-        const deadzone = 0.15;
-        const maxSpeed = 1;
+                const deadzone = 0.15;
+                const maxSpeed = 1;
 
-        // Contrôle moteurs uniquement
-        const speedLeft = Math.abs(data.leftY) > deadzone ? data.leftY * maxSpeed : 0;
-        const speedRight = Math.abs(data.rightY) > deadzone ? data.rightY * maxSpeed : 0;
+                const speedLeft = Math.abs(data.leftY) > deadzone ? clamp(data.leftY * maxSpeed, -1, 1) : 0;
+                const speedRight = Math.abs(data.rightY) > deadzone ? clamp(data.rightY * maxSpeed, -1, 1) : 0;
 
                 motorLeft.setTargetVelocity(speedLeft);
                 motorRight.setTargetVelocity(speedRight);
 
-                // --- Nachricht an Client (nur Distanz) ---
+                // --- Nachricht an Client ---
                 if (ws.readyState === ws.OPEN) {
                     ws.send(JSON.stringify({
                         distance: distanceAvailable ? lastDistance.toFixed(1) : null
                     }));
                 }
-
             } catch (err) {
                 console.error('❌ Fehler beim Verarbeiten der WS-Nachricht:', err);
             }
