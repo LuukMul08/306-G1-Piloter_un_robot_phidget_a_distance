@@ -1,4 +1,4 @@
-# SCRUM : Daily scrum du ... 2025
+# SCRUM : Daily scrum du vendredi 12 décembre 2025
 
 ## Ce qui a été fait cet après-mid
 
