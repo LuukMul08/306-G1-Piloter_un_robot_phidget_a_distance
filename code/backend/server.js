@@ -1,116 +1,52 @@
-import * as phidget22 from 'phidget22';
 import { WebSocketServer } from 'ws';
+import * as phidget22 from 'phidget22';
 
+import RoverModel from './model/RoverModel.js';
+import RoverView from './view/RoverView.js';
+import RoverController from './controller/RoverController.js';
+
+/**
+ * Point d'entrée du serveur Rover.
+ * Initialise le serveur WebSocket, le hub Phidget et les composants MVC.
+ */
 async function main() {
-    const wss = new WebSocketServer({ port: 8080 });
-    console.log('✅ WebSocket Server gestartet auf ws://localhost:8080');
+  // --- Serveur WebSocket ---
+  const wss = new WebSocketServer({ port: 8080 });
+  console.log('✅ Serveur WebSocket démarré sur ws://localhost:8080');
 
-    // --- Phidget Hub --- 
-    const hubIP = '10.18.1.126';
-    const conn = new phidget22.NetworkConnection(5661, hubIP);
+  // --- Connexion au hub Phidget ---
+  const hubIP = '10.18.1.126';
+  const conn = new phidget22.NetworkConnection(5661, hubIP);
 
-    try {
-        await conn.connect();
-        console.log(`✅ Verbunden mit Hub ${hubIP}`);
-    } catch (err) {
-        console.error('❌ Fehler bei der Hub-Verbindung:', err);
-        process.exit(1);
-    }
+  try {
+    await conn.connect();
+    console.log(`✅ Connecté au hub Phidget ${hubIP}`);
+  } catch (err) {
+    console.error('❌ Erreur lors de la connexion au hub :', err);
+    process.exit(1);
+  }
 
-    // --- Motoren ---
-    const motorLeft = new phidget22.DCMotor();
-    motorLeft.setIsRemote(true);
-    motorLeft.setDeviceSerialNumber(667784);
-    motorLeft.setChannel(0);
+  // --- Initialisation du modèle (motors + capteur de distance) ---
+  const model = new RoverModel();
+  await model.initMotors(667784, 667784, 0, 1);          // Initialise les moteurs gauche et droit
+  await model.initDistanceSensor(667784, 0);             // Initialise le capteur de distance
 
-    const motorRight = new phidget22.DCMotor();
-    motorRight.setIsRemote(true);
-    motorRight.setDeviceSerialNumber(667784);
-    motorRight.setChannel(1);
+  // --- Initialisation de la vue ---
+  const view = new RoverView();
 
-    try {
-        await motorLeft.open(10000);
-        await motorRight.open(10000);
-        console.log('✅ Motoren bereit');
-    } catch (err) {
-        console.error('❌ Fehler beim Öffnen der Motoren:', err);
-        process.exit(1);
-    }
+  // --- Gestion du signal SIGINT (CTRL+C) pour arrêt propre ---
+  process.on('SIGINT', async () => {
+    console.log('🛑 Arrêt des moteurs...');
+    await model.shutdown(); // Ferme moteurs et capteurs
+    process.exit();
+  });
 
-    // --- Distanzsensor optional ---
-    let distanceSensor;
-    let distanceAvailable = false;
-    let lastDistance = 100; // initial sehr weit weg
-
-    try {
-        distanceSensor = new phidget22.DistanceSensor();
-        distanceSensor.setIsRemote(true);
-        distanceSensor.setDeviceSerialNumber(667784);
-        distanceSensor.setChannel(0);
-
-        distanceSensor.onDistanceChange = (distance) => {
-            lastDistance = distance; // in cm
-        };
-
-        await distanceSensor.open(5000);
-        distanceAvailable = true;
-        console.log('✅ Distanzsensor bereit');
-    } catch (err) {
-        console.warn('⚠️ Distanzsensor optional: Sensor nicht gefunden oder Kanal falsch');
-    }
-
-    // --- CTRL+C Cleanup ---
-    process.on('SIGINT', async () => {
-        console.log('🛑 Motoren herunterfahren...');
-        try { await motorLeft.close(); } catch {}
-        try { await motorRight.close(); } catch {}
-        if (distanceAvailable) { try { await distanceSensor.close(); } catch {} }
-        process.exit();
-    });
-
-    // --- Helper ---
-    function clamp(v, min, max) { return Math.max(min, Math.min(max, v)); }
-
-    let lastUpdate = 0;
-    const updateInterval = 50;
-
-    wss.on('connection', ws => {
-        console.log('🔗 WebSocket Client verbunden');
-
-        ws.on('close', () => {
-            console.log('❌ Client getrennt → Motoren stoppen');
-            motorLeft.setTargetVelocity(0);
-            motorRight.setTargetVelocity(0);
-        });
-
-        ws.on('message', async message => {
-            const now = Date.now();
-            if (now - lastUpdate < updateInterval) return;
-            lastUpdate = now;
-
-            try {
-                const data = JSON.parse(message.toString());
-
-                const deadzone = 0.15;
-                const maxSpeed = 1;
-
-                const speedLeft = Math.abs(data.leftY) > deadzone ? clamp(data.leftY * maxSpeed, -1, 1) : 0;
-                const speedRight = Math.abs(data.rightY) > deadzone ? clamp(data.rightY * maxSpeed, -1, 1) : 0;
-
-                motorLeft.setTargetVelocity(speedLeft);
-                motorRight.setTargetVelocity(speedRight);
-
-                // --- Nachricht an Client ---
-                if (ws.readyState === ws.OPEN) {
-                    ws.send(JSON.stringify({
-                        distance: distanceAvailable ? lastDistance.toFixed(1) : null
-                    }));
-                }
-            } catch (err) {
-                console.error('❌ Fehler beim Verarbeiten der WS-Nachricht:', err);
-            }
-        });
-    });
+  // --- Gestion des connexions WebSocket ---
+  wss.on('connection', ws => {
+    console.log('🔗 Client WebSocket connecté');
+    new RoverController(model, view, ws); // Crée un contrôleur pour gérer la connexion
+  });
 }
 
+// --- Démarrage du serveur ---
 main();
