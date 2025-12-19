@@ -1,26 +1,105 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="fr">
+
 <head>
-  <meta charset="UTF-8">
-  <title>Rover Controller</title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Rover Controller — Full Screen</title>
   <link rel="stylesheet" href="/code/frontend/styles.css">
+  <script type="module" src="/code/frontend/controller/TestController.js"></script>
+  <script type="module" src="/code/frontend/controller/RoverController.js"></script>
 </head>
+
 <body>
+  <div class="wrap">
 
-  <h1>Contrôle du Rover</h1>
-  <div id="status">⏳ Attente de la manette...</div>
+    <header>
+      <div class="logo">ROV</div>
+      <div style="flex: 1;">
+        <h1>Contrôle du Rover</h1>
+      </div>
+      <div>
+        <a href="/code/frontend/manuel.html" class="btn help-btn">Aide</a>
+      </div>
+    </header>
 
-  <div id="controls">
-    <div class="control" id="speedMode">Vitesse: --</div>
-    <div class="control" id="stopState">STOP: --</div>
-    <div class="control" id="stickValues">Drive: -- | Steer: --</div>
-    <div class="control" id="buttons">Buttons: --</div>
-    <div class="control" id="distance">Distance: -- </div>
+
+    <div class="main">
+
+      <!-- COMMAND PANEL -->
+      <div class="panel">
+        <div class="status-row">
+          <div class="badge" id="connBadge"> Déconnecté</div>
+          <div style="margin-left:auto;text-align:right">
+            <div class="big-value">Vitesse: Normal</div>
+          </div>
+        </div>
+
+        <div class="controls-main">
+          <div class="joystick-panel">
+            <div class="joystick-wrap">
+              <div class="label">Drive</div>
+              <div class="joystick" id="joyDrive">
+                <div class="guide"></div>
+                <div class="stick"></div>
+              </div>
+            </div>
+            <div class="joystick-wrap">
+              <div class="label">Steer</div>
+              <div class="joystick" id="joySteer">
+                <div class="guide"></div>
+                <div class="stick"></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="dpad">
+            <div class="row">
+              <button data-dir="up">▲</button>
+            </div>
+            <div class="row">
+              <button data-dir="left">◀</button>
+              <button data-dir="down">▼</button>
+              <button data-dir="right">▶</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="controls-grid">
+          <div class="control-item">
+            <div class="label">Drive</div>
+            <div class="value" id="driveVal">0.00</div>
+          </div>
+          <div class="control-item">
+            <div class="label">Steer</div>
+            <div class="value" id="steerVal">0.00</div>
+          </div>
+          <div class="control-item">
+            <div class="label">Distance</div>
+            <div class="value" id="distance">--</div>
+          </div>
+          <div class="control-item">
+            <div class="label">STOP</div>
+            <div class="value">OK</div>
+          </div>
+        </div>
+
+        <div class="actions">
+          <button class="btn primary" id="connectBtn">Connexion</button>
+          <button class="btn secondary" id="toggleInputBtn">Clavier/Phone</button>
+          <button class="btn danger" id="stopBtn">EMERGENCY STOP</button>
+        </div>
+      </div>
+
+      <!-- LOG PANEL -->
+      <div class="log-panel">
+        <h3>Logs</h3>
+        <div class="log" id="log" style="white-space: pre-wrap;">Prêt.</div>
+      </div>
+
+    </div>
   </div>
 
-
-<!-- JavaScript -->
-<script src="/code/javascript/frontend.js"></script>
-
 </body>
+
 </html>

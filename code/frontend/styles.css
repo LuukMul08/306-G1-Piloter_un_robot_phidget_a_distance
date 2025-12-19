@@ -1,91 +1,337 @@
-/* style.css */
+:root {
+  font-size: 24px;
+  --bg: #0f1724;
+  --glass: rgba(255, 255, 255, 0.05);
+  --accent: #4f46e5;
+  --accent-2: #06b6d4;
+  --muted: #9aa4b2;
+  --success: #16a34a;
+  --danger: #ef4444;
+  font-family: Inter, system-ui;
+}
 
-/* --- Reset de base --- */
 * {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-  }
-  
-  /* --- Corps de la page --- */
-  body {
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    background: #1a1a1a;
-    color: #f0f0f0;
-    text-align: center;
-    min-height: 100vh;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: flex-start;
-    padding: 20px;
-  }
-  
-  /* --- Titre --- */
-  h1 {
-    font-size: 2.5rem;
-    margin-bottom: 20px;
-    color: #00bfff;
-    text-shadow: 1px 1px 3px #000;
-  }
-  
-  /* --- Status --- */
-  #status {
-    margin: 15px 0;
-    font-weight: bold;
-    font-size: 1.2rem;
-    padding: 10px 20px;
-    border-radius: 8px;
-    background-color: #333;
-    display: inline-block;
-    min-width: 250px;
-    transition: background-color 0.3s;
-  }
-  
-  #status.connected {
-    background-color: #006400;
-    color: #fff;
-  }
-  
-  /* --- Contrôles --- */
-  #controls {
-    margin-top: 25px;
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-    font-size: 1.1rem;
-  }
-  
-  /* --- Boutons --- */
-  button {
-    margin: 5px;
-    padding: 12px 20px;
-    font-size: 1rem;
-    font-weight: bold;
-    border: none;
-    border-radius: 8px;
-    cursor: pointer;
-    background-color: #00bfff;
-    color: #fff;
-    transition: background-color 0.2s, transform 0.1s;
-  }
-  
-  button:hover {
-    background-color: #009acd;
-    transform: translateY(-2px);
-  }
-  
-  button:active {
-    background-color: #0077aa;
-    transform: translateY(0);
-  }
-  
-  /* --- Info axes et boutons --- */
-  #controls div {
-    background-color: #222;
-    padding: 8px 12px;
-    border-radius: 6px;
-    display: inline-block;
-    min-width: 220px;
-  }
-  
+  box-sizing: border-box
+}
+
+html,
+body {
+  margin: 0;
+  height: 100%;
+  width: 100%;
+  background: linear-gradient(180deg, var(--bg), #071024);
+  color: #e6eef8;
+  overflow: hidden
+}
+
+.wrap {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  width: 100%;
+  padding: 12px;
+  margin-bottom: 50%;
+}
+
+/* HEADER */
+header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+header .help-btn {
+  padding: 8px 16px;
+  border-radius: 12px;
+  background: var(--accent-2);
+  color: white;
+  text-decoration: none;
+  font-weight: 700;
+  font-size: 1rem;
+  transition: background 0.2s;
+}
+
+header .help-btn:hover {
+  background: var(--accent);
+}
+
+
+header .logo {
+  width: 72px;
+  height: 72px;
+  border-radius: 14px;
+  background: linear-gradient(90deg, var(--accent), var(--accent-2));
+  display: grid;
+  place-items: center;
+  font-weight: 900;
+  font-size: 1.4rem
+}
+
+h1 {
+  margin: 0;
+  font-size: 1.8rem
+}
+
+.lead {
+  margin: 0;
+  color: var(--muted);
+  font-size: 1.1rem
+}
+
+/* MAIN GRID */
+.main {
+  display: flex;
+  flex: 1;
+  gap: 20px;
+  min-height: 0;
+  /* IMPORTANT pour que flex-child puisse réduire sa hauteur */
+}
+
+/* COMMAND PANEL */
+.panel {
+  background: var(--glass);
+  border-radius: 18px;
+  flex: 2;
+  display: flex;
+  flex-direction: column;
+  padding: 16px;
+  box-shadow: 0 8px 40px rgba(0, 0, 0, .6);
+  min-height: 0;
+  /* IMPORTANT pour le scroll interne */
+}
+
+/* STATUS */
+.status-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 12px
+}
+
+.badge {
+  padding: 12px 18px;
+  border-radius: 999px;
+  font-weight: 800;
+  font-size: 1rem;
+  border: 1px solid rgba(255, 255, 255, .08)
+}
+
+.badge.connected {
+  background: var(--success);
+  border: none;
+  color: #fff
+}
+
+.big-value {
+  font-size: 1.8rem;
+  font-weight: 900
+}
+
+/* CONTROLS MAIN */
+.controls-main {
+  display: flex;
+  flex: 1;
+  justify-content: center;
+  align-items: center;
+  gap: 40px
+}
+
+/* JOYSTICKS PANEL */
+.joystick-panel {
+  display: flex;
+  gap: 40px;
+  padding: 16px;
+  background: var(--glass);
+  border-radius: 18px;
+  flex: 3;
+  justify-content: center;
+  align-items: center
+}
+
+.joystick-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px
+}
+
+.label {
+  font-size: 1rem;
+  color: var(--muted)
+}
+
+/* JOYSTICK */
+.joystick {
+  width: 280px;
+  height: 280px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 30% 20%, rgba(255, 255, 255, .06), transparent 30%);
+  position: relative;
+  box-shadow: inset 0 12px 30px rgba(0, 0, 0, .75)
+}
+
+.guide {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .05)
+}
+
+.stick {
+  width: 90px;
+  height: 90px;
+  border-radius: 50%;
+  background: linear-gradient(180deg, #ffffff20, #00000010);
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  display: grid;
+  place-items: center;
+  font-weight: 900
+}
+
+/* DPAD */
+.dpad-panel {
+  padding: 16px;
+  background: var(--glass);
+  border-radius: 18px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  flex: 1;
+  justify-content: center
+}
+
+.dpad {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+
+.dpad .row {
+  display: flex;
+  gap: 12px;         /* réduire le vide entre les boutons horizontaux */
+}
+
+.dpad .mid {
+  display: flex;
+  gap: 10px
+}
+
+.dpad button {
+  width: 170px;      /* au lieu de 80px */
+  height: 170px;     /* au lieu de 64px */
+  font-size: 2rem;   /* agrandir le symbole ▲▼◀▶ */
+  border-radius: 16px;
+  background: linear-gradient(180deg, #ffffff18, #00000012);
+  color: #e6eef8;
+  cursor: pointer;
+  font-weight: 900;
+}
+
+.dpad button:active {
+  background: linear-gradient(180deg, var(--accent), var(--accent-2))
+}
+
+
+.dpad button:active:not(:enabled) {
+  background: linear-gradient(180deg, #ffffff18, #00000012);
+}
+
+
+
+/* VALUES */
+.controls-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+  margin-top: 16px
+}
+
+.control-item {
+  background: var(--glass);
+  padding: 14px;
+  border-radius: 14px;
+  text-align: center
+}
+
+.control-item .value {
+  font-weight: 900;
+  margin-top: 10px;
+  font-size: 1.2rem
+}
+
+/* ACTIONS */
+.actions {
+  display: flex;
+  gap: 16px;
+  margin-top: 16px
+}
+
+.btn {
+  padding: 16px 20px;
+  border-radius: 14px;
+  border: 0;
+  cursor: pointer;
+  font-weight: 900;
+  font-size: 1rem
+}
+
+.primary {
+  background: var(--accent);
+  color: white
+}
+
+.danger {
+  background: linear-gradient(90deg, #ff7a7a, var(--danger));
+  color: white
+}
+
+/* LOG PANEL */
+.log-panel {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  background: var(--glass);
+  border-radius: 18px;
+  padding: 16px;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, .6);
+  min-height: 0;
+  /* permet à .log de scroller au lieu de pousser la page */
+}
+
+.log-panel h3 {
+  margin-top: 0;
+  font-size: 1.4rem;
+  margin-bottom: 12px
+}
+
+.log {
+  flex: 1;
+  overflow-y: auto;
+  /* scroll vertical */
+  font-family: monospace;
+  font-size: 14px;
+  color: var(--muted);
+  border: 1px solid rgba(255, 255, 255, .08);
+  border-radius: 12px;
+  padding: 12px;
+  white-space: pre-wrap;
+}
+
+.btn.secondary {
+  background: var(--accent-2);
+  color: white;
+}
+
+.btn.secondary:hover {
+  background: var(--accent);
+}
+
+.hidden {
+  display: none !important;
+}
+
