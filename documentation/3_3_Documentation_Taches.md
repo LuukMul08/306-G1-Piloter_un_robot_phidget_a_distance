@@ -29,3 +29,18 @@
 
 ## Afficher le bouton d'arrêt d'urgence
 > Cette tâche consiste à afficher visuellement le bouton d’arrêt d’urgence dans l’interface utilisateur afin qu’il soit facilement accessible en cas de besoin.
+
+## Afficher les joysticks et leurs emplacements
+> Cette tâche consiste à afficher visuellement les joysticks de la manette Xbox ainsi que leur position actuelle (axes X et Y), afin de permettre à l’utilisateur de comprendre précisément les entrées envoyées au robot.
+
+## Afficher les messages d’information et d’erreur
+> Cette tâche vise à afficher des messages clairs et compréhensibles à l’utilisateur, qu’il s’agisse d’informations générales ou d’erreurs.
+
+## Afficher le statut de connexion du robot
+> Cette tâche permet d’afficher l’état de la connexion entre l’application et le robot (connecté / déconnecté), afin d’informer l’utilisateur en temps réel de la disponibilité du robot.
+
+## Refactorisation du code suivant l’architecture MVC
+> L’objectif de cette tâche est de restructurer le code existant selon l’architecture MVC (Modèle – Vue – Contrôleur) afin d’améliorer la lisibilité, la maintenabilité et la séparation des responsabilités dans l’application.
+
+# Créer les boutons de déplacement via le clavier
+> Cette tâche consiste à implémenter des boutons ou des raccourcis clavier permettant de déplacer le robot à l’aide du clavier, offrant ainsi une alternative à l’utilisation de la manette Xbox.
