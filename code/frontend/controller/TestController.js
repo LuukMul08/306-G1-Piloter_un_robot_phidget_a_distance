@@ -200,23 +200,7 @@ function attachJoystick(joyEl, stickEl, axis) {
 attachJoystick(joyDrive, stickDrive, 'drive');
 attachJoystick(joySteer, stickSteer, 'steer');
 
-// =======================
-// D-Pad
-// =======================
-document.querySelectorAll('.dpad button[data-dir]').forEach(b => {
-  b.addEventListener('mousedown', () => {
-    if (connected && rover.ws?.readyState === WebSocket.OPEN) {
-      log('D-Pad ' + b.dataset.dir);
-      rover.ws.send(JSON.stringify({ dpad: b.dataset.dir }));
-    }
-  });
-  b.addEventListener('mouseup', () => {
-    if (connected && rover.ws?.readyState === WebSocket.OPEN) {
-      log('D-Pad stop');
-      rover.ws.send(JSON.stringify({ dpad: 'stop' }));
-    }
-  });
-});
+
 
 // =======================
 // Emergency Stop
@@ -228,7 +212,80 @@ stopBtn.addEventListener('click', () => {
   }
 });
 
+function moveRobot(forward, steer = 0) {
+  curDrive = forward; // -1..1
+  curSteer = steer;   // -1..1
+  driveVal.textContent = curDrive.toFixed(2);
+  steerVal.textContent = curSteer.toFixed(2);
+  sendAxes();
+}
+
+
 // =======================
 // Initial state
 // =======================
 setControlsEnabled(false);
+
+// =======================
+// Contrôle par D-Pad et clavier (maintien)
+// =======================
+let controlInterval = null;
+
+function startMovement(forward, steer) {
+  curDrive = forward;
+  curSteer = steer;
+  driveVal.textContent = curDrive.toFixed(2);
+  steerVal.textContent = curSteer.toFixed(2);
+
+  if (!controlInterval) {
+    controlInterval = setInterval(sendAxes, 100); // envoie toutes les 100ms
+  }
+}
+
+function stopMovement() {
+  curDrive = 0;
+  curSteer = 0;
+  driveVal.textContent = '0.00';
+  steerVal.textContent = '0.00';
+  sendAxes();
+  if (controlInterval) {
+    clearInterval(controlInterval);
+    controlInterval = null;
+  }
+}
+
+// D-Pad clic et maintien
+document.querySelectorAll('.dpad button[data-dir]').forEach(b => {
+  b.addEventListener('mousedown', () => {
+    if (!connected) return;
+    const dir = b.dataset.dir;
+    if (dir === 'up') startMovement(1, 0);
+    else if (dir === 'down') startMovement(-1, 0);
+    else if (dir === 'left') startMovement(0, -1);
+    else if (dir === 'right') startMovement(0, 1);
+    log(`D-Pad ${dir} → en mouvement`);
+  });
+  b.addEventListener('mouseup', stopMovement);
+  b.addEventListener('mouseleave', stopMovement); // au cas où la souris sort du bouton
+});
+
+// Contrôle clavier
+const keyMap = {
+  ArrowUp:    () => startMovement(1, 0),
+  ArrowDown:  () => startMovement(-1, 0),
+  ArrowLeft:  () => startMovement(0, -1),
+  ArrowRight: () => startMovement(0, 1)
+};
+
+const keysPressed = new Set();
+
+window.addEventListener('keydown', (ev) => {
+  if (!connected || keysPressed.has(ev.code)) return; // éviter répétition auto
+  keysPressed.add(ev.code);
+  if (keyMap[ev.code]) keyMap[ev.code]();
+});
+
+window.addEventListener('keyup', (ev) => {
+  keysPressed.delete(ev.code);
+  if (Object.keys(keyMap).includes(ev.code)) stopMovement();
+});
