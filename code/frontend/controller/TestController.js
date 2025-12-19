@@ -6,7 +6,6 @@ import RoverController from './RoverController.js';
 const logEl = document.getElementById('log');
 const connBadge = document.getElementById('connBadge');
 const connectBtn = document.getElementById('connectBtn');
-const toggleInputBtn = document.getElementById('toggleInputBtn');
 
 const driveVal = document.getElementById('driveVal');
 const steerVal = document.getElementById('steerVal');
@@ -19,209 +18,214 @@ const stopBtn = document.getElementById('stopBtn');
 // State
 // =======================
 let connected = false;
-let inputMode = 'keyboard'; // 'keyboard' ou 'phone'
 
 // =======================
 // Rover Controller
 // =======================
 const rover = new RoverController();
 
+// Reflect connection changes in UI
+rover.onConnectChange = (state) => {
+  connected = state === 'connected';
+  if (connected) {
+    connBadge.textContent = "Connecté";
+    connBadge.classList.add('connected');
+    connBadge.classList.remove('disconnected');
+    setControlsEnabled(true);
+    connectBtn.textContent = "Déconnecter";
+    log("Connecté au serveur WebSocket");
+  } else {
+    connBadge.textContent = "Déconnecté";
+    connBadge.classList.remove('connected');
+    connBadge.classList.add('disconnected');
+    setControlsEnabled(false);
+    connectBtn.textContent = "Connexion";
+    log("Déconnecté du serveur WebSocket");
+  }
+};
+
+// Mirror gamepad axes on the UI joysticks
+const joyDrive = document.getElementById('joyDrive');
+const joySteer = document.getElementById('joySteer');
+const stickDrive = joyDrive.querySelector('.stick');
+const stickSteer = joySteer.querySelector('.stick');
+
+// Metrics for visual range
+let metrics = {
+  drive: { radius: 0, knobR: 0, maxR: 0, rect: null },
+  steer: { radius: 0, knobR: 0, maxR: 0, rect: null },
+};
+
+function recalcMetrics() {
+  // Drive
+  metrics.drive.rect = joyDrive.getBoundingClientRect();
+  metrics.drive.radius = metrics.drive.rect.width / 2;
+  metrics.drive.knobR = stickDrive.getBoundingClientRect().width / 2;
+  metrics.drive.maxR = Math.max(1, metrics.drive.radius - metrics.drive.knobR);
+
+  // Steer
+  metrics.steer.rect = joySteer.getBoundingClientRect();
+  metrics.steer.radius = metrics.steer.rect.width / 2;
+  metrics.steer.knobR = stickSteer.getBoundingClientRect().width / 2;
+  metrics.steer.maxR = Math.max(1, metrics.steer.radius - metrics.steer.knobR);
+}
+recalcMetrics();
+window.addEventListener('resize', recalcMetrics);
+
+// Update visuals from gamepad values
+rover.onAxesUpdate = ({ forward, steer }) => {
+  // numbers -1..1
+  driveVal.textContent = forward.toFixed(2);
+  steerVal.textContent = steer.toFixed(2);
+
+  const dy = -forward * metrics.drive.maxR;
+  const dx = steer * metrics.steer.maxR;
+
+  // keep -50% centering and add offsets
+  stickDrive.style.transform = `translate(calc(-50% + 0px), calc(-50% + ${dy}px))`;
+  stickSteer.style.transform = `translate(calc(-50% + ${dx}px), calc(-50% + 0px))`;
+};
+
 // =======================
 // Logging
 // =======================
 function log(msg) {
-    logEl.textContent = `${new Date().toLocaleTimeString()} ${msg}\n` + logEl.textContent;
-    logEl.scrollTop = 0;
+  logEl.textContent = `${new Date().toLocaleTimeString()} ${msg}\n` + logEl.textContent;
+  logEl.scrollTop = 0;
 }
 
 // =======================
 // Activer / désactiver les contrôles
 // =======================
 function setControlsEnabled(enabled) {
-    document.querySelectorAll('.dpad button').forEach(btn => {
-        btn.disabled = !enabled || btn.classList.contains('center');
-        btn.style.opacity = (!enabled || btn.classList.contains('center')) ? '0.5' : '1';
-        btn.style.cursor = btn.disabled ? 'not-allowed' : 'pointer';
-    });
+  document.querySelectorAll('.dpad button').forEach(btn => {
+    btn.disabled = !enabled || btn.classList.contains('center');
+    btn.style.opacity = (!enabled || btn.classList.contains('center')) ? '0.5' : '1';
+    btn.style.cursor = btn.disabled ? 'not-allowed' : 'pointer';
+  });
 
-    document.querySelectorAll('.joystick-wrap').forEach(wrap => {
-        wrap.style.pointerEvents = enabled ? 'auto' : 'none';
-        wrap.style.opacity = enabled ? '1' : '0.5';
-        wrap.style.cursor = enabled ? 'grab' : 'not-allowed';
-    });
+  document.querySelectorAll('.joystick-wrap').forEach(wrap => {
+    wrap.style.pointerEvents = enabled ? 'auto' : 'none';
+    wrap.style.opacity = enabled ? '1' : '0.5';
+    wrap.style.cursor = enabled ? 'grab' : 'not-allowed';
+  });
 
-    stopBtn.disabled = !enabled;
-    stopBtn.style.opacity = enabled ? '1' : '0.5';
-    stopBtn.style.cursor = enabled ? 'pointer' : 'not-allowed';
+  stopBtn.disabled = !enabled;
+  stopBtn.style.opacity = enabled ? '1' : '0.5';
+  stopBtn.style.cursor = enabled ? 'pointer' : 'not-allowed';
 }
 
 // =======================
 // Connexion / Déconnexion
 // =======================
 connectBtn.addEventListener('click', () => {
-    if (!connected) {
-        rover.ws = new WebSocket("ws://localhost:8080");
+  if (!connected) {
+    rover.connect("ws://localhost:8080");
+  } else {
+    rover.disconnect();
+  }
+});
 
-        rover.ws.onopen = () => {
-            connected = true;
-            connBadge.textContent = "🔌 Connecté";
-            connBadge.classList.add('connected');
-            setControlsEnabled(true);
-            connectBtn.textContent = "Déconnecter";
-            log("Rover connecté !");
-        };
+// =======================
+// Touch Joysticks (manual drag)
+// =======================
+let curDrive = 0; // -1..1
+let curSteer = 0; // -1..1
+function clamp(v, min, max) { return Math.max(min, Math.min(max, v)); }
+function sendAxes() {
+  if (connected && rover.ws && rover.ws.readyState === WebSocket.OPEN) {
+    const left = clamp(curDrive + curSteer / 2, -1, 1);
+    const right = clamp(curDrive - curSteer / 2, -1, 1);
+    rover.ws.send(JSON.stringify({
+      leftY: left,
+      rightY: right,
+      speedMode: rover.model.speedMode,
+      stop: rover.model.stopActive
+    }));
+  }
+}
 
-        rover.ws.onclose = () => {
-            connected = false;
-            connBadge.textContent = "🔌 Déconnecté";
-            connBadge.classList.remove('connected');
-            setControlsEnabled(false);
-            connectBtn.textContent = "Connexion";
-            log("Rover déconnecté !");
-        };
+function attachJoystick(joyEl, stickEl, axis) {
+  let rect, radius, knobR, maxR;
 
-        rover.ws.onerror = err => {
-            log("⚠️ Erreur WebSocket");
-            console.warn("WebSocket error:", err);
-        };
+  function recalc() {
+    rect = joyEl.getBoundingClientRect();
+    radius = rect.width / 2;
+    knobR = stickEl.getBoundingClientRect().width / 2;
+    maxR = Math.max(1, radius - knobR);
+  }
+
+  function onPointerMove(ev) {
+    const x = ev.clientX - rect.left - radius;
+    const y = ev.clientY - rect.top - radius;
+    const d = Math.hypot(x, y);
+    let dx = x, dy = y;
+    if (d > maxR) { dx *= maxR / d; dy *= maxR / d; }
+
+    stickEl.style.transform = `translate(calc(-50% + ${dx}px), calc(-50% + ${dy}px))`;
+
+    if (axis === 'drive') {
+      curDrive = clamp(-dy / maxR, -1, 1);
+      driveVal.textContent = curDrive.toFixed(2);
     } else {
-        rover.ws.close();
+      curSteer = clamp(dx / maxR, -1, 1);
+      steerVal.textContent = curSteer.toFixed(2);
     }
-});
+    sendAxes();
+  }
 
-// =======================
-// Drive Slider
-// =======================
-const driveSlider = document.createElement('input');
-driveSlider.type = 'range';
-driveSlider.id = 'driveSlider';
-driveSlider.min = -1;
-driveSlider.max = 1;
-driveSlider.step = 0.01;
-driveSlider.value = 0;
-driveSlider.style.width = '280px';
+  function onPointerUp() {
+    stickEl.style.transform = 'translate(-50%,-50%)';
+    if (axis === 'drive') { curDrive = 0; driveVal.textContent = '0.00'; }
+    else { curSteer = 0; steerVal.textContent = '0.00'; }
+    sendAxes();
+    window.removeEventListener('pointermove', onPointerMove);
+    window.removeEventListener('pointerup', onPointerUp);
+    window.removeEventListener('pointercancel', onPointerUp);
+  }
 
-// Remplace le joystick Drive par le slider
-const driveWrap = joystickPanel.querySelector('.joystick-wrap');
-driveWrap.innerHTML = '<div class="label">Drive</div>';
-driveWrap.appendChild(driveSlider);
-
-driveSlider.addEventListener('input', () => {
-    const value = parseFloat(driveSlider.value);
-    driveVal.textContent = value.toFixed(2);
-
-    if (connected && rover.ws.readyState === WebSocket.OPEN) {
-        rover.ws.send(JSON.stringify({
-            leftY: value,
-            rightY: value,
-            speedMode: rover.model.speedMode,
-            stop: rover.model.stopActive
-        }));
-    }
-});
-
-// =======================
-// Steer Joystick
-// =======================
-const joySteer = document.getElementById('joySteer');
-const stick = joySteer.querySelector('.stick');
-const r = joySteer.clientWidth / 2;
-
-joySteer.addEventListener('mousedown', e => {
+  joyEl.addEventListener('pointerdown', ev => {
     if (!connected) return;
-    const rect = joySteer.getBoundingClientRect();
+    recalc();
+    joyEl.setPointerCapture(ev.pointerId);
+    window.addEventListener('pointermove', onPointerMove);
+    window.addEventListener('pointerup', onPointerUp);
+    window.addEventListener('pointercancel', onPointerUp);
+    onPointerMove(ev);
+  });
 
-    function move(ev) {
-        let x = ev.clientX - rect.left - r;
-        let y = ev.clientY - rect.top - r;
-        const d = Math.hypot(x, y);
-        if (d > r) { x *= r / d; y *= r / d }
-        stick.style.transform = `translate(${x}px,${y}px)`;
-        steerVal.textContent = x.toFixed(2);
+  window.addEventListener('resize', recalc);
+}
 
-        if (connected && rover.ws.readyState === WebSocket.OPEN) {
-            const driveValue = parseFloat(driveSlider.value);
-            rover.ws.send(JSON.stringify({
-                leftY: driveValue + x / 2,
-                rightY: driveValue - x / 2,
-                speedMode: rover.model.speedMode,
-                stop: rover.model.stopActive
-            }));
-        }
-    }
-
-    document.addEventListener('mousemove', move);
-    document.addEventListener('mouseup', () => {
-        stick.style.transform = 'translate(-50%,-50%)';
-        steerVal.textContent = '0.00';
-        const driveValue = parseFloat(driveSlider.value);
-        if (connected && rover.ws.readyState === WebSocket.OPEN) {
-            rover.ws.send(JSON.stringify({
-                leftY: driveValue,
-                rightY: driveValue,
-                speedMode: rover.model.speedMode,
-                stop: rover.model.stopActive
-            }));
-        }
-        document.removeEventListener('mousemove', move);
-    }, { once: true });
-});
+attachJoystick(joyDrive, stickDrive, 'drive');
+attachJoystick(joySteer, stickSteer, 'steer');
 
 // =======================
 // D-Pad
 // =======================
 document.querySelectorAll('.dpad button[data-dir]').forEach(b => {
-    b.addEventListener('mousedown', () => {
-        if (connected && rover.ws.readyState === WebSocket.OPEN) {
-            log('D-Pad ' + b.dataset.dir);
-            // Exemple: envoyer direction
-            rover.ws.send(JSON.stringify({ dpad: b.dataset.dir }));
-        }
-    });
-    b.addEventListener('mouseup', () => {
-        if (connected && rover.ws.readyState === WebSocket.OPEN) {
-            log('D-Pad stop');
-            rover.ws.send(JSON.stringify({ dpad: 'stop' }));
-        }
-    });
+  b.addEventListener('mousedown', () => {
+    if (connected && rover.ws?.readyState === WebSocket.OPEN) {
+      log('D-Pad ' + b.dataset.dir);
+      rover.ws.send(JSON.stringify({ dpad: b.dataset.dir }));
+    }
+  });
+  b.addEventListener('mouseup', () => {
+    if (connected && rover.ws?.readyState === WebSocket.OPEN) {
+      log('D-Pad stop');
+      rover.ws.send(JSON.stringify({ dpad: 'stop' }));
+    }
+  });
 });
 
 // =======================
 // Emergency Stop
 // =======================
 stopBtn.addEventListener('click', () => {
-    if (connected && rover.ws.readyState === WebSocket.OPEN) {
-        rover.ws.send(JSON.stringify({ stop: true }));
-        log("STOP ! 🚨");
-    }
-});
-
-// =======================
-// Input Mode (Clavier / Phone)
-// =======================
-function updateInputModeUI() {
-    if (inputMode === 'keyboard') {
-        joystickPanel.classList.add('hidden');
-        dpad.classList.remove('hidden');
-    } else {
-        joystickPanel.classList.remove('hidden');
-        dpad.classList.add('hidden');
-    }
-}
-
-updateInputModeUI();
-
-toggleInputBtn.addEventListener('click', () => {
-    if (inputMode === 'keyboard') {
-        inputMode = 'phone';
-        toggleInputBtn.textContent = 'Phone';
-        log("Mode Phone activé");
-    } else {
-        inputMode = 'keyboard';
-        toggleInputBtn.textContent = 'Clavier';
-        log("Mode Clavier activé");
-    }
-    updateInputModeUI();
+  if (connected && rover.ws?.readyState === WebSocket.OPEN) {
+    rover.ws.send(JSON.stringify({ stop: true }));
+    log("STOP ! 🚨");
+  }
 });
 
 // =======================

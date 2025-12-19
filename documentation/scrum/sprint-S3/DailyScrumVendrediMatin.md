@@ -1,24 +1,21 @@
-# SCRUM : Daily scrum du vendredi 12 décembre 2025
+# SCRUM : Daily scrum du vendredi 19 décembre 2025
 
 ## Ce qui a été fait ce matin
 
 ### Andrei
 
-- Renseignement sur les moyens de connectivité entre le serveur phidget et le frontend ainsi qu'entre la manette et le phidget
-- Fait la connexion entre le phidget et le PC hôte
+- Fait l'interface de la page web et d'aide
 
 ### Luuk
 
-- Expérimentation de la connectivité de la manette.
-- User Stories
-- Enlever le texte "modèle" de tout les journaux
+- Finaliser le Kanban
+- Refactoriser le code en structure MVC + commenté le code
 
 ### Théo
 
-- Fait le planning
-- Modifier le cahier de charge
-- Fait le meeting avec le client
+- Modifier le sprint planning
+- Diagramme UML (Use Case, Séquence, Moitié d'activité)
 
 ## Problèmes rencontrés
 
-- Les directions du phidget étaient inversées
+- Aucun
