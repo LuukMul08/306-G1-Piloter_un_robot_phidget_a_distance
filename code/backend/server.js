@@ -5,48 +5,105 @@ import RoverModel from './model/RoverModel.js';
 import RoverView from './view/RoverView.js';
 import RoverController from './controller/RoverController.js';
 
-/**
- * Point d'entrée du serveur Rover.
- * Initialise le serveur WebSocket, le hub Phidget et les composants MVC.
- */
 async function main() {
   // --- Serveur WebSocket ---
   const wss = new WebSocketServer({ port: 8080 });
   console.log('✅ Serveur WebSocket démarré sur ws://localhost:8080');
 
-  // --- Connexion au hub Phidget ---
-  const hubIP = '10.18.1.126';
-  const conn = new phidget22.NetworkConnection(5661, hubIP);
-
-  try {
-    await conn.connect();
-    console.log(`✅ Connecté au hub Phidget ${hubIP}`);
-  } catch (err) {
-    console.error('❌ Erreur lors de la connexion au hub :', err);
-    process.exit(1);
-  }
-
-  // --- Initialisation du modèle (motors + capteur de distance) ---
+  // --- Modèle / Vue ---
   const model = new RoverModel();
-  await model.initMotors(667784, 667784, 0, 1);          // Initialise les moteurs gauche et droit
-  await model.initDistanceSensor(667784, 0);             // Initialise le capteur de distance
-
-  // --- Initialisation de la vue ---
   const view = new RoverView();
 
-  // --- Gestion du signal SIGINT (CTRL+C) pour arrêt propre ---
+  // --- Arrêt propre ---
   process.on('SIGINT', async () => {
     console.log('🛑 Arrêt des moteurs...');
-    await model.shutdown(); // Ferme moteurs et capteurs
+    await model.shutdown();
     process.exit();
   });
 
-  // --- Gestion des connexions WebSocket ---
+  // --- Connexions WebSocket ---
   wss.on('connection', ws => {
     console.log('🔗 Client WebSocket connecté');
-    new RoverController(model, view, ws); // Crée un contrôleur pour gérer la connexion
+
+    // --- Gestion des messages du client ---
+    ws.on('message', async (data) => {
+      try {
+        const msg = JSON.parse(data.toString());
+
+        // 🔌 Connexion au hub Phidget à la demande
+        if (msg.type === 'connect_phidget') {
+          const { ip, port } = msg;
+
+          console.log(`🔌 Connexion au hub Phidget ${ip}:${port}`);
+
+          try {
+            const conn = new phidget22.NetworkConnection(port, ip);
+
+            // --- Détecte les erreurs globales de connexion ---
+            conn.onError = (err) => {
+              console.warn('⚠️ Phidget error:', err.message);
+              ws.send(JSON.stringify({
+                type: 'phidget_status',
+                status: 'disconnected',
+                message: err.message
+              }));
+            };
+
+            // --- Détecte la perte de connexion avec le hub ---
+            conn.onDisconnect = () => {
+              console.warn('⚠️ Phidget disconnected');
+              ws.send(JSON.stringify({
+                type: 'phidget_status',
+                status: 'disconnected'
+              }));
+            };
+
+            // --- Connexion initiale ---
+            await conn.connect();
+            console.log('✅ Hub Phidget connecté');
+
+            // --- Initialisation des moteurs et capteurs ---
+            await model.initMotors(667784, 667784, 0, 1);
+            await model.initDistanceSensor(667784, 0);
+
+            // --- Surveille la déconnexion ou erreur des moteurs ---
+            [model.motorLeft, model.motorRight].forEach(motor => {
+              if (motor) {
+                motor.onDetach = () => {
+                  console.warn(`⚠️ Motor ${motor.getChannel()} detached`);
+                  ws.send(JSON.stringify({ type: 'phidget_status', status: 'disconnected' }));
+                };
+                motor.onError = (err) => {
+                  console.warn(`⚠️ Motor ${motor.getChannel()} error:`, err.message);
+                  ws.send(JSON.stringify({ type: 'phidget_status', status: 'disconnected' }));
+                };
+              }
+            });
+
+            // --- Envoi au frontend que tout est connecté ---
+            ws.send(JSON.stringify({
+              type: 'phidget_status',
+              status: 'connected'
+            }));
+
+          } catch (err) {
+            console.error('❌ Erreur Phidget lors de la connexion :', err.message);
+            ws.send(JSON.stringify({
+              type: 'phidget_status',
+              status: 'disconnected',
+              message: err.message
+            }));
+          }
+        }
+
+      } catch (err) {
+        console.error('❌ Message WebSocket invalide :', err);
+      }
+    });
+
+    // --- Crée le contrôleur Rover pour gérer les commandes moteur ---
+    new RoverController(model, view, ws);
   });
 }
 
-// --- Démarrage du serveur ---
 main();

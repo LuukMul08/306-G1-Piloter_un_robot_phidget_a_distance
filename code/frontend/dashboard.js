@@ -1,55 +1,102 @@
 document.addEventListener("DOMContentLoaded", () => {
+    // --- Éléments du DOM ---
+    const backendStatusElement = document.getElementById("backend-connection-status");
+    const backendDot = backendStatusElement.previousElementSibling;
+    const connectBtn = document.getElementById("connect-backend-btn");
     const form = document.querySelector("form");
-    const ws = new WebSocket("ws://localhost:8080");
+    const phidgetStatusElement = document.getElementById('phidget-connection-status');
+    const phidgetDot = phidgetStatusElement.previousElementSibling;
 
-    const backendStatusElement = document.getElementById("connection-status");
+    let ws = null;
+    let phidgetReady = false; // Indique si le Phidget est connecté
 
-    ws.onopen = () => {
-        backendStatusElement.textContent = "Backend Server Connected";
-        backendStatusElement.className = "text-green-500";
-    };
+    // --- Fonction de mise à jour du footer backend ---
+    function setBackendStatus(connected) {
+        backendStatusElement.textContent = connected
+            ? "Backend Server Connected"
+            : "Backend Server Disconnected";
 
-    ws.onclose = () => {
-        backendStatusElement.textContent = "Backend Server Disconnected";
-        backendStatusElement.className = "text-red-500";
-    };
+        backendDot.classList.toggle("bg-primary", connected);
+        backendDot.classList.toggle("bg-accent-red", !connected);
 
-    ws.onerror = () => {
-        backendStatusElement.textContent = "Backend Server Error";
-        backendStatusElement.className = "text-red-500";
-        console.error("WebSocket error occurred.");
-    };
+        connectBtn.disabled = connected;
+        connectBtn.textContent = connected ? "Connected" : "Connect backend";
+    }
 
-    ws.onmessage = event => {
-        const data = JSON.parse(event.data);
-        if (data.status === "success") {
-            backendStatusElement.textContent = data.message;
-            backendStatusElement.className = "text-green-500";
+    // --- Fonction de mise à jour du footer Phidget ---
+    function setPhidgetStatus(status) {
+        phidgetReady = status === 'connected';
+
+        if (phidgetReady) {
+            phidgetStatusElement.textContent = 'Phidget Network Server Connected';
+            phidgetDot.classList.remove('bg-accent-red');
+            phidgetDot.classList.add('bg-primary');
         } else {
-            backendStatusElement.textContent = data.message;
-            backendStatusElement.className = "text-red-500";
+            phidgetStatusElement.textContent = 'Phidget Network Server Disconnected';
+            phidgetDot.classList.remove('bg-primary');
+            phidgetDot.classList.add('bg-accent-red');
         }
-    };
+    }
 
-    form.addEventListener("submit", event => {
+    // --- Connexion manuelle au backend ---
+    connectBtn.addEventListener("click", () => {
+        if (ws && ws.readyState === WebSocket.OPEN) return;
+
+        backendStatusElement.textContent = "Connecting...";
+        backendDot.classList.remove("bg-primary", "bg-accent-red");
+
+        ws = new WebSocket("ws://localhost:8080");
+
+        ws.onopen = () => {
+            console.log("WebSocket connected");
+            setBackendStatus(true);
+        };
+
+        ws.onclose = () => {
+            console.log("WebSocket disconnected");
+            setBackendStatus(false);
+            setPhidgetStatus('disconnected'); // Déconnexion Phidget si backend tombe
+        };
+
+        ws.onerror = () => {
+            console.log("WebSocket error");
+            // onclose gère l’état
+        };
+
+        ws.onmessage = (event) => {
+            try {
+                const msg = JSON.parse(event.data);
+
+                if (msg.type === 'phidget_status') {
+                    setPhidgetStatus(msg.status);
+                }
+            } catch (err) {
+                console.error('❌ Erreur en traitant le message WS :', err);
+            }
+        };
+    });
+
+    // --- Envoi du formulaire pour connecter le Phidget ---
+    form.addEventListener("submit", (event) => {
         event.preventDefault();
 
         const ipAddress = document.getElementById("ip-address").value.trim();
         const port = document.getElementById("port").value.trim() || 5661;
+        const autoConnect = document.getElementById("remember-me").checked;
 
-        if (!ipAddress || !/^\d{1,3}(\.\d{1,3}){3}$/.test(ipAddress)) {
-            alert("Please enter a valid IP address.");
-            return;
-        }
-        if (isNaN(port) || port <= 0 || port > 65535) {
-            alert("Please enter a valid port number (1-65535).");
+        if (!ws || ws.readyState !== WebSocket.OPEN) {
+            alert("Backend server not connected");
             return;
         }
 
-        if (ws.readyState === WebSocket.OPEN) {
-            ws.send(JSON.stringify({ action: "connect", ip: ipAddress, port: parseInt(port, 10) }));
-        } else {
-            alert("WebSocket is not ready. Please try again later.");
-        }
+        const payload = {
+            type: "connect_phidget",
+            ip: ipAddress,
+            port: Number(port),
+            autoConnect: autoConnect
+        };
+
+        ws.send(JSON.stringify(payload));
+        console.log("Sent to backend:", payload);
     });
 });

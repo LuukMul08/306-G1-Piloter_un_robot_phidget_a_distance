@@ -159,16 +159,24 @@
             <p class="text-xs text-gray-500 dark:text-gray-400">
                 © 2026 PhidgetControl Dashboard.
             </p>
-            <div class="flex space-x-6 items-center">
+            <div class="flex items-center gap-3">
+                <button id="connect-backend-btn"
+                    class="px-3 py-1 text-xs font-medium rounded-lg bg-primary text-white hover:bg-green-700 transition disabled:opacity-50">
+                    Connect backend
+                </button>
+
                 <div class="flex items-center gap-2">
-                    <span class="h-2 w-2 rounded-full bg-accent-red animate-pulse"></span>
-                    <span id="connection-status" class="text-xs text-gray-500 dark:text-gray-400">Backend Server Disconnected</span>
+                    <span class="h-2 w-2 rounded-full bg-accent-red"></span>
+                    <span id="backend-connection-status" class="text-xs text-gray-500 dark:text-gray-400">
+                        Backend Server Disconnected
+                    </span>
                 </div>
             </div>
             <div class="flex space-x-6 items-center">
                 <div class="flex items-center gap-2">
                     <span class="h-2 w-2 rounded-full bg-accent-red animate-pulse"></span>
-                    <span class="text-xs text-gray-500 dark:text-gray-400">Phidget Network Server Disconnected</span>
+                    <span id="phidget-connection-status" class="text-xs text-gray-500 dark:text-gray-400">Phidget
+                        Network Server Disconnected</span>
                 </div>
             </div>
         </div>
