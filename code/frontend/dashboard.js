@@ -92,7 +92,7 @@ document.addEventListener("DOMContentLoaded", () => {
                         // Auto-redirect to main dashboard once both connections are successful
                         if (backendReady && phidgetReady) {
                             setTimeout(() => {
-                                window.location.href = "switchDevice.html";  // Redirect to the main dashboard
+                                window.location.href = "./html/switchDevice.html";  // Redirect to the main dashboard
                             }, 1); // Delay 1 second before redirect
                         }
                     } else {
