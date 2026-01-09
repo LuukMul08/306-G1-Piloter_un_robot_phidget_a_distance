@@ -1,24 +1,23 @@
-# SCRUM : Daily scrum du vendredi 12 décembre 2025
+# SCRUM : Daily scrum du vendredi 9 janvier 2026
 
 ## Ce qui a été fait ce matin
 
 ### Andrei
 
-- Renseignement sur les moyens de connectivité entre le serveur phidget et le frontend ainsi qu'entre la manette et le phidget
-- Fait la connexion entre le phidget et le PC hôte
+- Documentation sur les protocols de test.
+- Développer la page dashboard.
 
 ### Luuk
 
-- Expérimentation de la connectivité de la manette.
-- User Stories
-- Enlever le texte "modèle" de tout les journaux
+- Dévélepper la page du clavier
+- Fait la page pour choisir entre clavier et manette
+- Merge entre dashboard et le reste
 
 ### Théo
 
-- Fait le planning
-- Modifier le cahier de charge
-- Fait le meeting avec le client
+- Diagramme de séquence d'interaction
+- Implémenter la page d'aide
 
 ## Problèmes rencontrés
 
-- Les directions du phidget étaient inversées
+- Luuk n'arrivait pas à faire bouger le robot
