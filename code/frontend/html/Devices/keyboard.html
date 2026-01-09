@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>Rover Command - Keyboard Control</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,typography"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet" />
+
+    <script>
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        primary: "#107C10",
+                        "background-light": "#F3F4F6",
+                        "background-dark": "#111827",
+                        "surface-light": "#FFFFFF",
+                        "surface-dark": "#1F2937",
+                        "text-light": "#1F2937",
+                        "text-dark": "#F9FAFB",
+                    },
+                    fontFamily: {
+                        sans: ["Inter", "sans-serif"],
+                    },
+                    borderRadius: {
+                        'xl': "1rem",
+                        '2xl': "1.5rem",
+                    },
+                },
+            },
+        };
+    </script>
+    <style>
+        .log-scrollbar::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .log-scrollbar::-webkit-scrollbar-track {
+            background: rgba(0, 0, 0, 0.2);
+        }
+
+        .log-scrollbar::-webkit-scrollbar-thumb {
+            background: rgba(16, 124, 16, 0.3);
+            border-radius: 10px;
+        }
+
+        .log-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: #107C10;
+        }
+
+        /* Animation pour les touches pressées via JS */
+        .key-active {
+            transform: translateY(4px);
+            border-bottom-width: 0px !important;
+            background-color: #107C10 !important;
+            color: white !important;
+        }
+    </style>
+</head>
+
+<body
+    class="bg-background-light dark:bg-background-dark text-text-light dark:text-text-dark font-sans transition-colors duration-200 min-h-screen flex flex-col overflow-hidden">
+
+    <nav class="bg-surface-light dark:bg-surface-dark border-b border-gray-200 dark:border-gray-700 sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16">
+                <div class="flex items-center gap-3">
+                    <div class="bg-primary/10 p-2 rounded-lg">
+                        <span class="material-icons text-primary text-2xl">keyboard</span>
+                    </div>
+                    <div>
+                        <span class="font-bold text-lg tracking-tight block leading-none">Rover Command</span>
+                        <span class="text-[10px] text-gray-500 uppercase tracking-widest">Keyboard Interface v1.3</span>
+                    </div>
+                </div>
+                <div class="flex items-center gap-4">
+                    <a class="hidden sm:inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-lg text-white bg-primary hover:bg-green-700 transition-all"
+                        href="../Guide/controllerGuide.html">
+                        <span class="material-icons text-sm mr-2">help</span> Guide
+                    </a>
+                    <div class="h-6 w-px bg-gray-200 dark:bg-gray-700 mx-2"></div>
+                    <button
+                        class="p-2 rounded-full text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white"
+                        onclick="document.documentElement.classList.toggle('dark')">
+                        <span class="material-icons dark:hidden">dark_mode</span>
+                        <span class="material-icons hidden dark:block">light_mode</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <main class="flex-1 overflow-y-auto p-4 lg:p-8 max-w-7xl mx-auto w-full flex flex-col gap-6">
+
+        <section class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div
+                class="bg-surface-light dark:bg-surface-dark p-5 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-sm flex items-center justify-between">
+                <div>
+                    <p class="text-xs font-bold text-gray-500 uppercase tracking-wider">Connection</p>
+                    <p class="text-2xl font-black text-emerald-500">Connected</p>
+                    <p class="text-[10px] text-gray-400">Latency: 24ms</p>
+                </div>
+                <span class="material-icons text-4xl text-emerald-500/20">sensors</span>
+            </div>
+
+            <div
+                class="bg-surface-light dark:bg-surface-dark p-5 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-sm flex items-center justify-between">
+                <div>
+                    <p class="text-xs font-bold text-gray-500 uppercase tracking-wider">Speed Mode</p>
+                    <p class="text-2xl font-black text-primary">Normal</p>
+                    <div class="w-32 bg-gray-200 dark:bg-gray-700 h-1.5 rounded-full mt-2">
+                        <div class="bg-primary h-1.5 rounded-full" style="width: 60%"></div>
+                    </div>
+                </div>
+                <span class="material-icons text-4xl text-primary/20">speed</span>
+            </div>
+
+            <div
+                class="bg-surface-light dark:bg-surface-dark p-5 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-sm flex items-center justify-between">
+                <div>
+                    <p class="text-xs font-bold text-gray-500 uppercase tracking-wider">Obstacle Dist.</p>
+                    <p class="text-2xl font-black italic">1.4<span class="text-sm font-normal ml-1">m</span></p>
+                    <p class="text-[10px] text-gray-400 font-medium">Clear path ahead</p>
+                </div>
+                <span class="material-icons text-4xl text-gray-400/20">radar</span>
+            </div>
+        </section>
+
+        <section class="grid grid-cols-1 lg:grid-cols-12 gap-6 flex-1">
+
+            <div
+                class="lg:col-span-7 bg-surface-light dark:bg-surface-dark rounded-2xl border border-gray-200 dark:border-gray-700 p-8 flex flex-col items-center justify-center relative shadow-lg overflow-hidden">
+                <div class="absolute top-0 left-0 w-full h-1 bg-primary/20"></div>
+                <h3 class="absolute top-6 text-sm font-black uppercase tracking-[0.3em] text-gray-400">Steering Control
+                </h3>
+
+                <div
+                    class="grid grid-cols-3 gap-4 p-8 bg-gray-100 dark:bg-black/20 rounded-[2.5rem] border border-gray-200 dark:border-gray-800 shadow-inner">
+                    <div class="col-start-2">
+                        <button id="keyArrowUp"
+                            class="size-20 sm:size-24 rounded-2xl bg-white dark:bg-surface-dark border-b-8 border-gray-300 dark:border-black text-gray-700 dark:text-white shadow-xl hover:text-primary transition-all flex items-center justify-center active:translate-y-1 active:border-b-4">
+                            <span class="material-icons text-4xl">arrow_upward</span>
+                        </button>
+                    </div>
+                    <div class="col-start-1 row-start-2">
+                        <button id="keyArrowLeft"
+                            class="size-20 sm:size-24 rounded-2xl bg-white dark:bg-surface-dark border-b-8 border-gray-300 dark:border-black text-gray-700 dark:text-white shadow-xl hover:text-primary transition-all flex items-center justify-center active:translate-y-1 active:border-b-4">
+                            <span class="material-icons text-4xl">arrow_back</span>
+                        </button>
+                    </div>
+                    <div class="col-start-3 row-start-2">
+                        <button id="keyArrowRight"
+                            class="size-20 sm:size-24 rounded-2xl bg-white dark:bg-surface-dark border-b-8 border-gray-300 dark:border-black text-gray-700 dark:text-white shadow-xl hover:text-primary transition-all flex items-center justify-center active:translate-y-1 active:border-b-4">
+                            <span class="material-icons text-4xl">arrow_forward</span>
+                        </button>
+                    </div>
+                    <div class="col-start-2 row-start-3">
+                        <button id="keyArrowDown"
+                            class="size-20 sm:size-24 rounded-2xl bg-white dark:bg-surface-dark border-b-8 border-gray-300 dark:border-black text-gray-700 dark:text-white shadow-xl hover:text-primary transition-all flex items-center justify-center active:translate-y-1 active:border-b-4">
+                            <span class="material-icons text-4xl">arrow_downward</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="lg:col-span-5 flex flex-col gap-6">
+                <div
+                    class="bg-surface-light dark:bg-surface-dark rounded-2xl border border-gray-200 dark:border-gray-700 p-6 shadow-md">
+                    <div class="flex justify-between items-center mb-4">
+                        <label
+                            class="text-[10px] uppercase font-black text-gray-400 tracking-widest text-red-500">Emergency
+                            Override</label>
+                        <span class="animate-pulse flex h-2 w-2 rounded-full bg-red-500"></span>
+                    </div>
+                    <button id="keySpace"
+                        class="w-full py-10 rounded-2xl bg-red-600 hover:bg-red-700 active:bg-red-900 text-white font-black text-4xl tracking-widest border-b-[10px] border-red-900 shadow-2xl transition-all flex items-center justify-center gap-4 relative overflow-hidden active:translate-y-2 active:border-b-0">
+                        <span class="material-icons text-5xl">gpp_maybe</span>
+                        STOP
+                    </button>
+                </div>
+
+                <div
+                    class="flex-1 bg-black rounded-2xl border border-gray-800 p-5 font-mono text-xs flex flex-col shadow-2xl min-h-[300px]">
+                    <div class="flex justify-between items-center mb-4 border-b border-gray-900 pb-2">
+                        <span class="text-primary font-bold flex items-center gap-2">
+                            <span class="material-icons text-sm">terminal</span> SYSTEM_LOG
+                        </span>
+                        <div class="flex gap-1">
+                            <div class="w-2 h-2 rounded-full bg-red-500 opacity-50"></div>
+                            <div class="w-2 h-2 rounded-full bg-yellow-500 opacity-50"></div>
+                            <div class="w-2 h-2 rounded-full bg-green-500 opacity-50"></div>
+                        </div>
+                    </div>
+                    <div class="flex-1 overflow-y-auto log-scrollbar space-y-1 text-gray-400">
+                        <p><span class="text-gray-600">[10:41:02]</span> Initializing systems...</p>
+                        <p><span class="text-gray-600">[10:41:08]</span> <span class="text-emerald-500">Connection
+                                established</span></p>
+                        <p><span class="text-gray-600">[10:41:15]</span> Speed mode: <span
+                                class="text-primary font-bold">NORMAL</span></p>
+                        <p class="bg-red-500/10 text-red-400 px-1 rounded"><span class="text-gray-600">[10:42:30]</span>
+                            Obstacle detected: 1.4m</p>
+                        <p><span class="text-gray-600">[10:43:02]</span> Camera feed active</p>
+                        <p class="animate-pulse text-primary mt-4 font-bold">> Awaiting input_</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <script type="module">
+        import RoverController from "/code/frontend/controller/KeyboardController.js";
+        new RoverController();
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>Rover Command - Controller</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,typography"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet" />
+
+    <script shadow-config>
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        primary: "#107C10",
+                        "background-light": "#F3F4F6",
+                        "background-dark": "#111827",
+                        "surface-light": "#FFFFFF",
+                        "surface-dark": "#1F2937",
+                        "text-light": "#1F2937",
+                        "text-dark": "#F9FAFB",
+                    },
+                    fontFamily: {
+                        sans: ["Inter", "sans-serif"],
+                    },
+                },
+            },
+        };
+    </script>
+    <style>
+        .log-scrollbar::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .log-scrollbar::-webkit-scrollbar-track {
+            background: rgba(0, 0, 0, 0.2);
+        }
+
+        .log-scrollbar::-webkit-scrollbar-thumb {
+            background: rgba(16, 124, 16, 0.3);
+            border-radius: 10px;
+        }
+
+        .log-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: #107C10;
+        }
+
+        /* Style spécifique pour les joysticks/knobs */
+        .knob-container {
+            background: radial-gradient(circle, rgba(0, 0, 0, 0.05) 0%, rgba(0, 0, 0, 0.2) 100%);
+            box-shadow: inset 0 4px 10px rgba(0, 0, 0, 0.2);
+        }
+
+        .dark .knob-container {
+            background: radial-gradient(circle, rgba(255, 255, 255, 0.02) 0%, rgba(0, 0, 0, 0.4) 100%);
+        }
+    </style>
+</head>
+
+<body id="app-root"
+    class="bg-background-light dark:bg-background-dark text-text-light dark:text-text-dark font-sans transition-colors duration-200 min-h-screen flex flex-col overflow-hidden">
+
+    <nav id="main-header"
+        class="bg-surface-light dark:bg-surface-dark border-b border-gray-200 dark:border-gray-700 sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16">
+                <div class="flex items-center gap-3">
+                    <div class="bg-primary/10 p-2 rounded-lg">
+                        <span class="material-icons text-primary text-2xl">sports_esports</span>
+                    </div>
+                    <div>
+                        <span class="font-bold text-lg tracking-tight block leading-none">Rover Command</span>
+                        <span class="text-[10px] text-gray-500 uppercase tracking-widest">Controller Interface
+                            v1.3</span>
+                    </div>
+                </div>
+                <div class="flex items-center gap-4">
+                    <a class="hidden sm:inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-lg text-white bg-primary hover:bg-green-700 transition-all"
+                        href="../Guide/controllerGuide.html">
+                        <span class="material-icons text-sm mr-2">help</span> Guide
+                    </a>
+                    <div class="h-6 w-px bg-gray-200 dark:bg-gray-700 mx-2"></div>
+                    <button
+                        class="p-2 rounded-full text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white"
+                        onclick="document.documentElement.classList.toggle('dark')">
+                        <span class="material-icons dark:hidden">dark_mode</span>
+                        <span class="material-icons hidden dark:block">light_mode</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <main id="main-content" class="flex-1 overflow-y-auto p-4 lg:p-8 max-w-7xl mx-auto w-full flex flex-col gap-6">
+
+        <section id="metrics-section" class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div id="card-status"
+                class="bg-surface-light dark:bg-surface-dark p-5 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-sm flex items-center justify-between">
+                <div>
+                    <p class="text-xs font-bold text-gray-500 uppercase tracking-wider">Status</p>
+                    <p id="status-text" class="text-2xl font-black text-emerald-500">Connected</p>
+                    <p id="latency-text" class="text-[10px] text-gray-400">Latency: 24ms</p>
+                </div>
+                <div id="status-indicator" class="relative flex h-3 w-3">
+                    <span
+                        class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                    <span class="relative inline-flex rounded-full h-3 w-3 bg-emerald-500"></span>
+                </div>
+            </div>
+
+            <div id="card-speed"
+                class="bg-surface-light dark:bg-surface-dark p-5 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-sm flex items-center justify-between">
+                <div>
+                    <p class="text-xs font-bold text-gray-500 uppercase tracking-wider">Speed Mode</p>
+                    <p id="speed-mode-text" class="text-2xl font-black text-primary">Normal</p>
+                    <div class="w-32 bg-gray-200 dark:bg-gray-700 h-1.5 rounded-full mt-2">
+                        <div id="speed-bar" class="bg-primary h-1.5 rounded-full" style="width: 60%"></div>
+                    </div>
+                </div>
+                <span class="material-icons text-4xl text-primary/20">speed</span>
+            </div>
+
+            <div id="card-sensor"
+                class="bg-surface-light dark:bg-surface-dark p-5 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-sm flex items-center justify-between">
+                <div>
+                    <p class="text-xs font-bold text-gray-500 uppercase tracking-wider">Front Sensor</p>
+                    <p id="distance-text" class="text-2xl font-black italic">1.4<span
+                            class="text-sm font-normal ml-1">m</span></p>
+                    <p id="sensor-msg" class="text-[10px] text-gray-400 font-medium">Clear path ahead</p>
+                </div>
+                <span class="material-icons text-4xl text-gray-400/20">sensors</span>
+            </div>
+        </section>
+
+        <section id="control-section" class="grid grid-cols-1 lg:grid-cols-12 gap-6 flex-1">
+
+            <div id="manual-panel"
+                class="lg:col-span-7 bg-surface-light dark:bg-surface-dark rounded-2xl border border-gray-200 dark:border-gray-700 p-8 flex flex-col items-center justify-center relative shadow-lg overflow-hidden">
+                <div class="absolute top-0 left-0 w-full h-1 bg-primary/20"></div>
+                <h3 class="absolute top-6 text-sm font-black uppercase tracking-[0.3em] text-gray-400">Analog Control
+                </h3>
+
+                <div class="flex flex-col md:flex-row items-center justify-center gap-16 w-full pt-10">
+                    <div class="flex flex-col items-center gap-4">
+                        <div id="drive-boundary"
+                            class="knob-container relative size-48 sm:size-56 rounded-full border-4 border-gray-200 dark:border-gray-800 flex items-center justify-center touch-none">
+                            <div id="drive-knob-handle"
+                                class="absolute size-24 rounded-full bg-white dark:bg-surface-dark border-b-4 border-gray-300 dark:border-black shadow-2xl flex items-center justify-center cursor-grab active:cursor-grabbing z-10 transition-transform duration-75">
+                                <div
+                                    class="size-16 rounded-full bg-gradient-to-b from-transparent to-black/5 dark:to-white/5 border border-gray-100 dark:border-gray-700">
+                                </div>
+                            </div>
+                            <div class="absolute size-1 w-px bg-gray-300 dark:bg-gray-600"></div>
+                            <div class="absolute w-1 h-px bg-gray-300 dark:bg-gray-600"></div>
+                        </div>
+                        <span class="text-[10px] font-black uppercase text-gray-400 tracking-widest">Drive
+                            (Linear)</span>
+                    </div>
+
+                    <div class="flex flex-col items-center gap-4">
+                        <div id="steer-boundary"
+                            class="knob-container relative size-48 sm:size-56 rounded-full border-4 border-gray-200 dark:border-gray-800 flex items-center justify-center touch-none">
+                            <div id="steer-knob-handle"
+                                class="absolute size-24 rounded-full bg-white dark:bg-surface-dark border-b-4 border-gray-300 dark:border-black shadow-2xl flex items-center justify-center cursor-grab active:cursor-grabbing z-10 transition-transform duration-75">
+                                <div
+                                    class="size-16 rounded-full bg-gradient-to-b from-transparent to-black/5 dark:to-white/5 border border-gray-100 dark:border-gray-700">
+                                </div>
+                            </div>
+                            <div class="absolute size-1 w-px bg-gray-300 dark:bg-gray-600"></div>
+                            <div class="absolute w-1 h-px bg-gray-300 dark:bg-gray-600"></div>
+                        </div>
+                        <span class="text-[10px] font-black uppercase text-gray-400 tracking-widest">Steer
+                            (Angular)</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="lg:col-span-5 flex flex-col gap-6">
+                <div id="buttons-panel"
+                    class="bg-surface-light dark:bg-surface-dark rounded-2xl border border-gray-200 dark:border-gray-700 p-6 shadow-md space-y-4">
+                    <button id="btn-system-connect"
+                        class="w-full py-3 rounded-xl bg-emerald-500/10 text-emerald-600 font-bold border border-emerald-500/20 hover:bg-emerald-500/20 transition-all flex items-center justify-center gap-2">
+                        <span class="material-icons text-sm">link</span> SYSTEM CONNECTED
+                    </button>
+
+                    <div>
+                        <div class="flex justify-between items-center mb-2">
+                            <label class="text-[10px] uppercase font-black text-red-500 tracking-widest">Emergency
+                                Override</label>
+                            <span id="emergency-status"
+                                class="animate-pulse flex h-2 w-2 rounded-full bg-red-500"></span>
+                        </div>
+                        <button id="btn-emergency-stop"
+                            class="w-full py-8 rounded-2xl bg-red-600 hover:bg-red-700 active:bg-red-900 text-white font-black text-3xl tracking-widest border-b-[8px] border-red-900 shadow-xl transition-all flex items-center justify-center gap-4 active:translate-y-2 active:border-b-0">
+                            <span class="material-icons text-4xl">gpp_maybe</span> STOP
+                        </button>
+                    </div>
+                </div>
+
+                <div id="log-panel"
+                    class="flex-1 bg-black rounded-2xl border border-gray-800 p-5 font-mono text-xs flex flex-col shadow-2xl min-h-[250px]">
+                    <div class="flex justify-between items-center mb-4 border-b border-gray-900 pb-2">
+                        <span class="text-primary font-bold flex items-center gap-2 uppercase tracking-tighter">
+                            <span class="material-icons text-sm">terminal</span> System_Log
+                        </span>
+                        <div class="flex gap-1">
+                            <div class="w-2 h-2 rounded-full bg-red-500 opacity-50"></div>
+                            <div class="w-2 h-2 rounded-full bg-yellow-500 opacity-50"></div>
+                            <div class="w-2 h-2 rounded-full bg-green-500 opacity-50"></div>
+                        </div>
+                    </div>
+                    <div id="log-content" class="flex-1 overflow-y-auto log-scrollbar space-y-1 text-gray-400">
+                        <p><span class="text-gray-600">[10:41:02]</span> Initializing systems...</p>
+                        <p class="animate-pulse text-primary mt-4 font-bold">> Awaiting controller input_</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <script type="module">
+        import RoverController from "/code/frontend/controller/RoverController.js";
+        new RoverController();
+    </script>
+</body>
+
+</html>
