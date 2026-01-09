@@ -67,16 +67,21 @@ export default class RoverModel {
    * @param {number} right - Vitesse moteur droit
    */
   setMotorSpeeds(left, right) {
-    const clamp = (v, min, max) => Math.max(min, Math.min(max, v));
-    const deadzone = 0.15;
-    const maxSpeed = 1;
-
-    const speedLeft = Math.abs(left) > deadzone ? clamp(left * maxSpeed, -1, 1) : 0;
-    const speedRight = Math.abs(right) > deadzone ? clamp(right * maxSpeed, -1, 1) : 0;
-
-    this.motorLeft.setTargetVelocity(speedLeft);
-    this.motorRight.setTargetVelocity(speedRight);
+  if (!this.motorLeft || !this.motorRight) {
+    console.warn("⚠️ Motoren noch nicht initialisiert – Befehl ignoriert");
+    return;
   }
+
+  const clamp = (v, min, max) => Math.max(min, Math.min(max, v));
+  const deadzone = 0.15;
+  const maxSpeed = 1;
+
+  const speedLeft = Math.abs(left) > deadzone ? clamp(left * maxSpeed, -1, 1) : 0;
+  const speedRight = Math.abs(right) > deadzone ? clamp(right * maxSpeed, -1, 1) : 0;
+
+  this.motorLeft.setTargetVelocity(speedLeft);
+  this.motorRight.setTargetVelocity(speedRight);
+}
 
   /**
    * Ferme les moteurs et le capteur de distance.

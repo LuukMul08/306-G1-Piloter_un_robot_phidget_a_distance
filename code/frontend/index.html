@@ -1,85 +1,168 @@
 <!DOCTYPE html>
-<html lang="fr">
+<html class="dark" lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Rover Steuerung auswählen</title>
-  <style>
-    body {
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      background-color: #121212;
-      color: #fff;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      height: 100vh;
-      margin: 0;
-    }
-
-    h1 {
-      font-size: 32px;
-      margin-bottom: 40px;
-      text-align: center;
-      color: #00ffcc;
-    }
-
-    .mode-selection {
-      display: flex;
-      gap: 40px;
-    }
-
-    .mode-card {
-      background-color: #1e1e1e;
-      border: 2px solid #333;
-      border-radius: 12px;
-      padding: 40px 60px;
-      text-align: center;
-      cursor: pointer;
-      transition: transform 0.2s, border-color 0.2s, background-color 0.2s;
-    }
-
-    .mode-card:hover {
-      transform: scale(1.05);
-      border-color: #00ffcc;
-      background-color: #2a2a2a;
-    }
-
-    .mode-card h2 {
-      font-size: 24px;
-      margin-bottom: 15px;
-    }
-
-    .mode-card p {
-      font-size: 16px;
-      color: #aaa;
-    }
-  </style>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Rover Command - Select Control Mode</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+tailwind.config = {
+    darkMode: "class",
+    theme: {
+        extend: {
+            colors: {
+                "primary": "#135bec",
+                "background-light": "#f6f6f8",
+                "background-dark": "#101622",
+            },
+            fontFamily: {
+                "display": ["Space Grotesk", "sans-serif"]
+            },
+            borderRadius: {
+                "DEFAULT": "0.25rem",
+                "lg": "0.5rem",
+                "xl": "0.75rem",
+                "full": "9999px"
+            },
+        },
+    },
+}
+</script>
+<style>
+.material-symbols-outlined {
+    font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+}
+body {
+    font-family: 'Space Grotesk', sans-serif;
+}
+.card-hover:hover {
+    border-color: #135bec;
+    box-shadow: 0 0 20px rgba(19, 91, 236, 0.2);
+    transform: translateY(-4px);
+    transition: all 0.3s ease;
+}
+</style>
 </head>
-<body>
+<body class="bg-background-light dark:bg-background-dark text-slate-900 dark:text-white min-h-screen transition-colors duration-300">
+<div class="layout-container flex h-full grow flex-col">
+    <!-- TopNavBar -->
+    <header class="flex items-center justify-between whitespace-nowrap border-b border-solid border-slate-200 dark:border-slate-800 px-10 py-3 bg-white/50 dark:bg-background-dark/50 backdrop-blur-md sticky top-0 z-50">
+        <div class="flex items-center gap-4">
+            <div class="size-8 text-primary">
+                <svg fill="none" viewbox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
+                    <path clip-rule="evenodd" d="M24 4H6V17.3333V30.6667H24V44H42V30.6667V17.3333H24V4Z" fill="currentColor" fill-rule="evenodd"></path>
+                </svg>
+            </div>
+            <h2 class="text-slate-900 dark:text-white text-xl font-bold leading-tight tracking-tight">Rover Command Center</h2>
+        </div>
+        <div class="flex flex-1 justify-end gap-4 items-center">
+            <div class="flex gap-2">
+                <button class="flex size-10 cursor-pointer items-center justify-center rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:text-primary transition-colors">
+                    <span class="material-symbols-outlined" data-icon="settings">settings</span>
+                </button>
+                <button class="flex size-10 cursor-pointer items-center justify-center rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:text-primary transition-colors">
+                    <span class="material-symbols-outlined" data-icon="notifications">notifications</span>
+                </button>
+            </div>
+            <div class="h-8 w-px bg-slate-200 dark:border-slate-700 mx-2"></div>
+            <div class="flex items-center gap-3 bg-slate-100 dark:bg-slate-800 pl-3 pr-1 py-1 rounded-full">
+                <span class="text-sm font-medium text-slate-700 dark:text-slate-200">Cmdr. Shepard</span>
+                <div class="bg-center bg-no-repeat aspect-square bg-cover rounded-full size-8 border-2 border-primary" data-alt="Official profile photo of the rover commander" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuBGIY8GHbojyoLlmXA6EtrqVDqs-yXbXelZTNAqKMeRkTw3dUEILYvtd8dnZd-_S1Wxa1aB0zXyQLqvY82YpZXKo2qM9ceU6_Tt4kk2SMYw22bHZjyvut0uSMaBMI6Kjpc63tu0C3ubsjDz_8OPu7LeiV-SAqlb2Wx-n2cDsnIsvLzrJVL_wSwPEPUGe0IFz3UmlSVNJHyyJM-lI19bZC0zVI-bRMLfdxJAVQBJ80MBmXz_eCGIj98-OYQf_TyGSzB02jRIEk17KG5T");'></div>
+            </div>
+        </div>
+    </header>
 
-  <h1>🚀 Rover Steuerung auswählen</h1>
+    <main class="flex-1 flex flex-col items-center justify-center px-4 py-12 max-w-6xl mx-auto w-full">
+        <!-- Headline Section -->
+        <div class="text-center max-w-2xl mb-12">
+            <h1 class="text-slate-900 dark:text-white tracking-tight text-4xl md:text-5xl font-bold leading-tight pb-4">
+                Select Control Mode
+            </h1>
+            <p class="text-slate-500 dark:text-[#9da6b9] text-lg font-normal leading-relaxed">
+                Choose your preferred interface to begin the Martian surface operation. Ensure all peripherals are calibrated before starting.
+            </p>
+        </div>
 
-  <div class="mode-selection">
-    <div class="mode-card" onclick="chooseMode('controller')">
-      <h2>🎮 Controller</h2>
-      <p>Steuere den Rover mit einem Xbox- oder Gamepad-Controller.</p>
-    </div>
+        <!-- Main Selection Cards -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8 w-full">
 
-    <div class="mode-card" onclick="chooseMode('keyboard')">
-      <h2>⌨️ Keyboard</h2>
-      <p>Steuere den Rover mit der Tastatur (WASD + Pfeiltasten).</p>
-    </div>
-  </div>
+            <!-- Controller Card -->
+            <div class="card-hover group flex flex-col items-center p-8 rounded-xl bg-white dark:bg-[#1a2130] border border-slate-200 dark:border-slate-800 transition-all cursor-pointer">
+                <div class="w-full bg-slate-100 dark:bg-slate-800/50 aspect-video rounded-lg flex items-center justify-center mb-8 overflow-hidden relative">
+                    <div class="absolute inset-0 bg-primary/5 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                    <span class="material-symbols-outlined text-primary text-8xl transition-transform group-hover:scale-110" style="font-size: 80px;">sports_esports</span>
+                </div>
+                <div class="text-center">
+                    <h3 class="text-slate-900 dark:text-white text-2xl font-bold mb-3">Controller Control</h3>
+                    <p class="text-slate-500 dark:text-[#9da6b9] text-base mb-8 max-w-xs">
+                        High-fidelity analog maneuvering using a connected Xbox or DualShock gamepad. Best for smooth camera movement.
+                    </p>
+                </div>
+                <!-- Button: Controller -->
+                <button onclick="window.location.href='controllerFinal.html'" 
+                    class="w-full max-w-[240px] flex cursor-pointer items-center justify-center overflow-hidden rounded-lg h-12 px-5 bg-primary text-white text-base font-bold leading-normal tracking-wide hover:brightness-110 transition-all">
+                    <span class="truncate">Select Mode</span>
+                    <span class="material-symbols-outlined ml-2 text-sm">rocket_launch</span>
+                </button>
+                <div class="mt-4 flex items-center gap-2 text-xs font-semibold text-emerald-500 bg-emerald-500/10 px-3 py-1 rounded-full uppercase tracking-widest">
+                    <span class="size-2 bg-emerald-500 rounded-full animate-pulse"></span>
+                    Device Connected
+                </div>
+            </div>
 
-  <script>
-    function chooseMode(mode) {
-      if (mode === 'controller') {
-        window.location.href = '/code/frontend/controllerFinal.html'; // Controller-Seite
-      } else if (mode === 'keyboard') {
-        window.location.href = '/code/frontend/keyboard.html'; // Keyboard-Seite
-      }
-    }
-  </script>
+            <!-- Keyboard Card -->
+            <div class="card-hover group flex flex-col items-center p-8 rounded-xl bg-white dark:bg-[#1a2130] border border-slate-200 dark:border-slate-800 transition-all cursor-pointer">
+                <div class="w-full bg-slate-100 dark:bg-slate-800/50 aspect-video rounded-lg flex items-center justify-center mb-8 overflow-hidden relative">
+                    <div class="absolute inset-0 bg-primary/5 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                    <span class="material-symbols-outlined text-primary text-8xl transition-transform group-hover:scale-110" style="font-size: 80px;">keyboard</span>
+                </div>
+                <div class="text-center">
+                    <h3 class="text-slate-900 dark:text-white text-2xl font-bold mb-3">Keyboard Control</h3>
+                    <p class="text-slate-500 dark:text-[#9da6b9] text-base mb-8 max-w-xs">
+                        Precise digital input via WASD keys and macro shortcuts. Best for scientific sampling and technical tasks.
+                    </p>
+                </div>
+                <!-- Button: Keyboard -->
+                <button onclick="window.location.href='keyboard.html'" 
+                    class="w-full max-w-[240px] flex cursor-pointer items-center justify-center overflow-hidden rounded-lg h-12 px-5 bg-slate-200 dark:bg-slate-700 text-slate-800 dark:text-white text-base font-bold leading-normal tracking-wide hover:bg-slate-300 dark:hover:bg-slate-600 transition-all">
+                    <span class="truncate">Select Mode</span>
+                    <span class="material-symbols-outlined ml-2 text-sm">keyboard_command_key</span>
+                </button>
+                <div class="mt-4 flex items-center gap-2 text-xs font-semibold text-slate-400 bg-slate-400/10 px-3 py-1 rounded-full uppercase tracking-widest">
+                    Standard Input Ready
+                </div>
+            </div>
 
+        </div>
+
+        <!-- Additional Help/Link -->
+        <div class="mt-16 flex items-center gap-6">
+            <div class="flex items-center gap-2 text-[#9da6b9] text-sm cursor-help hover:text-white transition-colors">
+                <span class="material-symbols-outlined text-lg">help_outline</span>
+                <span>Calibration Guide</span>
+            </div>
+            <div class="w-1 h-1 bg-slate-700 rounded-full"></div>
+            <div class="flex items-center gap-2 text-[#9da6b9] text-sm cursor-help hover:text-white transition-colors">
+                <span class="material-symbols-outlined text-lg">info</span>
+                <span>System Requirements</span>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer / Status Bar -->
+    <footer class="px-10 py-4 bg-white dark:bg-[#0c111d] border-t border-slate-200 dark:border-slate-800 flex justify-between items-center text-[10px] uppercase tracking-[0.2em] font-bold text-slate-400">
+        <div class="flex items-center gap-4">
+            <span class="flex items-center gap-1.5"><span class="size-1.5 bg-primary rounded-full"></span> ROVER STATUS: NOMINAL</span>
+            <span class="flex items-center gap-1.5"><span class="size-1.5 bg-emerald-500 rounded-full"></span> CONNECTION: 142ms LATENCY</span>
+        </div>
+        <div class="flex gap-4">
+            <span>LAT: 18.65° N</span>
+            <span>LON: 226.2° E</span>
+            <span>SOL: 452</span>
+        </div>
+    </footer>
+</div>
 </body>
 </html>

@@ -1,389 +1,191 @@
 <!DOCTYPE html>
 <html class="dark" lang="en">
-  <head>
-    <meta charset="utf-8" />
-    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+<head>
+    <meta charset="utf-8"/>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
     <title>Rover Controller</title>
     <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
-    <link
-      href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&amp;display=swap"
-      rel="stylesheet"
-    />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
-      rel="stylesheet"
-    />
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
     <script id="tailwind-config">
-      tailwind.config = {
-        darkMode: "class",
-        theme: {
-          extend: {
-            colors: {
-              primary: "#135bec",
-              "background-light": "#f6f6f8",
-              "background-dark": "#101622",
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#135bec",
+                        "background-light": "#f6f6f8",
+                        "background-dark": "#101622",
+                    },
+                    fontFamily: {
+                        "display": ["Space Grotesk", "sans-serif"]
+                    },
+                    borderRadius: { "DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px" },
+                },
             },
-            fontFamily: {
-              display: ["Space Grotesk", "sans-serif"],
-            },
-            borderRadius: {
-              DEFAULT: "0.25rem",
-              lg: "0.5rem",
-              xl: "0.75rem",
-              full: "9999px",
-            },
-          },
-        },
-      };
+        }
     </script>
     <style>
-      .scrollbar-hide::-webkit-scrollbar {
-        display: none;
-      }
-      .scrollbar-hide {
-        -ms-overflow-style: none;
-        scrollbar-width: none;
-      }
-      .log-scrollbar {
-        scrollbar-width: thin;
-        scrollbar-color: rgba(255, 255, 255, 0.2) rgba(255, 255, 255, 0.05);
-      }
-      .log-scrollbar::-webkit-scrollbar {
-        width: 6px;
-      }
-      .log-scrollbar::-webkit-scrollbar-track {
-        background: rgba(255, 255, 255, 0.05);
-      }
-      .log-scrollbar::-webkit-scrollbar-thumb {
-        background: rgba(255, 255, 255, 0.2);
-        border-radius: 20px;
-      }
-      .log-scrollbar::-webkit-scrollbar-thumb:hover {
-        background: rgba(255, 255, 255, 0.4);
-      }
+        .scrollbar-hide::-webkit-scrollbar { display: none; }
+        .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+        .log-scrollbar { scrollbar-width: thin; scrollbar-color: rgba(255, 255, 255, 0.2) rgba(255, 255, 255, 0.05); }
+        .log-scrollbar::-webkit-scrollbar { width: 6px; }
+        .log-scrollbar::-webkit-scrollbar-track { background: rgba(255, 255, 255, 0.05); }
+        .log-scrollbar::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.2); border-radius: 20px; }
+        .log-scrollbar::-webkit-scrollbar-thumb:hover { background: rgba(255, 255, 255, 0.4); }
     </style>
-  </head>
-  <body
-    class="bg-background-light dark:bg-background-dark text-slate-900 dark:text-white font-display min-h-screen flex flex-col overflow-hidden"
-  >
-    <header
-      class="flex items-center justify-between whitespace-nowrap border-b border-slate-200 dark:border-[#282e39] px-6 py-4 bg-white dark:bg-[#111318]"
-    >
-      <div class="flex items-center gap-4">
-        <div
-          class="size-10 rounded-full bg-primary/20 flex items-center justify-center text-primary"
-        >
-          <span class="material-symbols-outlined text-2xl">sports_esports</span>
+</head>
+<body id="app-root" class="bg-background-light dark:bg-background-dark text-slate-900 dark:text-white font-display min-h-screen flex flex-col overflow-hidden">
+    
+    <header id="main-header" class="flex items-center justify-between whitespace-nowrap border-b border-slate-200 dark:border-[#282e39] px-6 py-4 bg-white dark:bg-[#111318]">
+        <div class="flex items-center gap-4">
+            <div class="size-10 rounded-full bg-primary/20 flex items-center justify-center text-primary">
+                <span class="material-symbols-outlined text-2xl">sports_esports</span>
+            </div>
+            <div class="flex flex-col">
+                <h1 class="text-xl font-bold leading-tight tracking-tight dark:text-white">ROV</h1>
+                <span class="text-xs text-slate-500 dark:text-slate-400 font-medium">CONTROLLER V1.3</span>
+            </div>
         </div>
-        <div class="flex flex-col">
-          <h1
-            class="text-xl font-bold leading-tight tracking-tight dark:text-white"
-          >
-            ROV
-          </h1>
-          <span class="text-xs text-slate-500 dark:text-slate-400 font-medium"
-            >CONTROLLER V1.3</span
-          >
-        </div>
-      </div>
-      <h2
-        class="hidden md:block text-2xl font-bold tracking-widest uppercase text-slate-800 dark:text-white"
-      >
-        Rover Controller
-      </h2>
-      <button
-        class="flex size-10 items-center justify-center rounded-full bg-slate-100 dark:bg-[#282e39] text-slate-600 dark:text-white hover:bg-slate-200 dark:hover:bg-[#3b4354] transition-colors"
-        onclick="window.open('./manuel.html', '_blank')">
-        <span class="material-symbols-outlined">help</span>
-      </button>
+        <h2 class="hidden md:block text-2xl font-bold tracking-widest uppercase text-slate-800 dark:text-white">Rover Controller</h2>
+        <button id="btn-help" class="flex size-10 items-center justify-center rounded-full bg-slate-100 dark:bg-[#282e39] text-slate-600 dark:text-white hover:bg-slate-200 dark:hover:bg-[#3b4354] transition-colors">
+            <span class="material-symbols-outlined">help</span>
+        </button>
     </header>
-    <main
-      class="flex-1 overflow-y-auto p-4 md:p-8 flex flex-col gap-6 max-w-7xl mx-auto w-full"
-    >
-      <section class="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div
-          class="flex flex-col gap-2 rounded-xl p-6 bg-white dark:bg-[#1c212c] border border-slate-200 dark:border-[#282e39] shadow-sm relative overflow-hidden group"
-        >
-          <div
-            class="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity"
-          >
-            <span class="material-symbols-outlined text-6xl">wifi</span>
-          </div>
-          <div class="flex items-center justify-between mb-2">
-            <p
-              class="text-slate-500 dark:text-slate-400 text-sm font-medium uppercase tracking-wider"
-            >
-              Status
-            </p>
-            <div class="flex items-center gap-2">
-              <span class="relative flex h-3 w-3">
-                <span
-                  class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"
-                ></span>
-                <span
-                  class="relative inline-flex rounded-full h-3 w-3 bg-emerald-500"
-                ></span>
-              </span>
-            </div>
-          </div>
-          <p
-            class="text-2xl md:text-3xl font-bold text-emerald-600 dark:text-emerald-400"
-          >
-            Connected
-          </p>
-          <p class="text-xs text-slate-400 dark:text-slate-500">
-            Latency: 24ms
-          </p>
-        </div>
-        <div
-          class="flex flex-col gap-2 rounded-xl p-6 bg-white dark:bg-[#1c212c] border border-slate-200 dark:border-[#282e39] shadow-sm relative overflow-hidden group"
-        >
-          <div
-            class="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity"
-          >
-            <span class="material-symbols-outlined text-6xl">speed</span>
-          </div>
-          <div class="flex items-center justify-between mb-2">
-            <p
-              class="text-slate-500 dark:text-slate-400 text-sm font-medium uppercase tracking-wider"
-            >
-              Speed Mode
-            </p>
-          </div>
-          <p class="text-2xl md:text-3xl font-bold text-primary">Normal</p>
-          <div
-            class="w-full bg-slate-200 dark:bg-slate-700 rounded-full h-1.5 mt-2"
-          >
-            <div class="bg-primary h-1.5 rounded-full" style="width: 60%"></div>
-          </div>
-        </div>
-        <div
-          class="flex flex-col gap-2 rounded-xl p-6 bg-white dark:bg-[#1c212c] border border-slate-200 dark:border-[#282e39] shadow-sm relative overflow-hidden group"
-        >
-          <div
-            class="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity"
-          >
-            <span class="material-symbols-outlined text-6xl">sensors</span>
-          </div>
-          <div class="flex items-center justify-between mb-2">
-            <p
-              class="text-slate-500 dark:text-slate-400 text-sm font-medium uppercase tracking-wider"
-            >
-              Front Sensor
-            </p>
-          </div>
-          <p class="text-2xl md:text-3xl font-bold text-white dark:text-white">
-            1.4<span class="text-lg text-slate-400 ml-1">m</span>
-          </p>
-          <p class="text-xs text-slate-400 dark:text-slate-500">
-            Clear path ahead
-          </p>
-        </div>
-      </section>
-      <section
-        class="grid grid-cols-1 lg:grid-cols-12 gap-6 flex-1 min-h-[450px]"
-      >
-        <div
-          class="lg:col-span-7 bg-white dark:bg-[#1c212c] rounded-xl border border-slate-200 dark:border-[#282e39] p-8 flex flex-col items-center justify-center relative shadow-sm"
-        >
-          <h3
-            class="absolute top-6 left-0 right-0 text-lg font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 text-center"
-          >
-            Manual Control
-          </h3>
-          <div
-            class="flex flex-col md:flex-row items-center justify-center gap-12 md:gap-20 w-full h-full pt-8"
-          >
-            <div class="flex flex-col items-center gap-5 group">
-              <div
-                class="relative size-44 md:size-56 rounded-full bg-slate-100 dark:bg-[#111318] shadow-[inset_0_4px_10px_rgba(0,0,0,0.15)] border border-slate-200 dark:border-[#282e39] flex items-center justify-center"
-              >
-                <div
-                  class="absolute inset-0 rounded-full border border-slate-200 dark:border-white/5 opacity-50"
-                ></div>
-                <div
-                  class="absolute top-4 bottom-4 w-px bg-slate-200 dark:bg-white/5"
-                ></div>
-                <div
-                  class="absolute left-4 right-4 h-px bg-slate-200 dark:bg-white/5"
-                ></div>
-                <div
-                  class="relative size-24 md:size-28 rounded-full bg-gradient-to-br from-slate-50 to-slate-200 dark:from-[#2a3140] dark:to-[#1c212c] shadow-[0_10px_20px_rgba(0,0,0,0.3),inset_0_2px_4px_rgba(255,255,255,0.1)] border border-slate-300 dark:border-[#3b4354] flex items-center justify-center cursor-pointer transform transition-transform active:scale-95 hover:border-primary/50"
-                >
-                  <div
-                    class="size-20 md:size-24 rounded-full bg-gradient-to-b from-transparent to-black/10 dark:to-black/30 border-[1.5px] border-dashed border-slate-400/30 dark:border-white/10 shadow-inner"
-                  ></div>
-                  <div
-                    class="absolute top-3 left-1/2 -translate-x-1/2 w-8 h-4 bg-white/40 blur-md rounded-full"
-                  ></div>
+
+    <main id="main-content" class="flex-1 overflow-y-auto p-4 md:p-8 flex flex-col gap-6 max-w-7xl mx-auto w-full">
+        
+        <section id="metrics-section" class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            
+            <div id="card-status" class="flex flex-col gap-2 rounded-xl p-6 bg-white dark:bg-[#1c212c] border border-slate-200 dark:border-[#282e39] shadow-sm relative overflow-hidden group">
+                <div class="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
+                    <span class="material-symbols-outlined text-6xl">wifi</span>
                 </div>
-              </div>
-              <div class="flex flex-col items-center gap-1">
-                <span
-                  class="text-sm font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400 group-hover:text-primary transition-colors"
-                  >Drive</span
-                >
-                <span
-                  class="text-[10px] uppercase font-medium text-slate-400 dark:text-slate-600"
-                  >Fwd / Rev</span
-                >
-              </div>
-            </div>
-            <div
-              class="hidden md:block w-px h-32 bg-slate-200 dark:bg-[#282e39]"
-            ></div>
-            <div class="flex flex-col items-center gap-5 group">
-              <div
-                class="relative size-44 md:size-56 rounded-full bg-slate-100 dark:bg-[#111318] shadow-[inset_0_4px_10px_rgba(0,0,0,0.15)] border border-slate-200 dark:border-[#282e39] flex items-center justify-center"
-              >
-                <div
-                  class="absolute inset-0 rounded-full border border-slate-200 dark:border-white/5 opacity-50"
-                ></div>
-                <div
-                  class="absolute top-4 bottom-4 w-px bg-slate-200 dark:bg-white/5"
-                ></div>
-                <div
-                  class="absolute left-4 right-4 h-px bg-slate-200 dark:bg-white/5"
-                ></div>
-                <div
-                  class="relative size-24 md:size-28 rounded-full bg-gradient-to-br from-slate-50 to-slate-200 dark:from-[#2a3140] dark:to-[#1c212c] shadow-[0_10px_20px_rgba(0,0,0,0.3),inset_0_2px_4px_rgba(255,255,255,0.1)] border border-slate-300 dark:border-[#3b4354] flex items-center justify-center cursor-pointer transform transition-transform active:scale-95 hover:border-primary/50"
-                >
-                  <div
-                    class="size-20 md:size-24 rounded-full bg-gradient-to-b from-transparent to-black/10 dark:to-black/30 border-[1.5px] border-dashed border-slate-400/30 dark:border-white/10 shadow-inner"
-                  ></div>
-                  <div
-                    class="absolute top-3 left-1/2 -translate-x-1/2 w-8 h-4 bg-white/40 blur-md rounded-full"
-                  ></div>
+                <div class="flex items-center justify-between mb-2">
+                    <p class="text-slate-500 dark:text-slate-400 text-sm font-medium uppercase tracking-wider">Status</p>
+                    <div class="flex items-center gap-2">
+                        <span id="status-indicator" class="relative flex h-3 w-3">
+                            <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                            <span class="relative inline-flex rounded-full h-3 w-3 bg-emerald-500"></span>
+                        </span>
+                    </div>
                 </div>
-              </div>
-              <div class="flex flex-col items-center gap-1">
-                <span
-                  class="text-sm font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400 group-hover:text-primary transition-colors"
-                  >Steer</span
-                >
-                <span
-                  class="text-[10px] uppercase font-medium text-slate-400 dark:text-slate-600"
-                  >Left / Right</span
-                >
-              </div>
+                <p id="status-text" class="text-2xl md:text-3xl font-bold text-emerald-600 dark:text-emerald-400">Connected</p>
+                <p id="latency-text" class="text-xs text-slate-400 dark:text-slate-500">Latency: 24ms</p>
             </div>
-          </div>
-        </div>
-        <div class="lg:col-span-5 flex flex-col gap-6">
-          <div
-            class="bg-white dark:bg-[#1c212c] rounded-xl border border-slate-200 dark:border-[#282e39] p-6 flex flex-col gap-5 shadow-sm"
-          >
-            <button
-              class="w-full py-4 rounded-lg bg-emerald-600/10 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 font-bold border border-emerald-600/20 hover:bg-emerald-600/20 transition-all flex items-center justify-center gap-2 group"
-            >
-              <span class="material-symbols-outlined group-hover:animate-pulse"
-                >link</span
-              >
-              SYSTEM CONNECTED
-            </button>
-            <div class="h-px bg-slate-200 dark:bg-slate-800"></div>
-            <div class="flex flex-col gap-2">
-              <div class="flex justify-between items-end">
-                <label
-                  class="text-xs uppercase font-bold text-slate-400 tracking-wider"
-                  >Emergency Override</label
-                >
-                <span
-                  class="text-[10px] bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 px-2 py-0.5 rounded uppercase font-bold"
-                  >Active</span
-                >
-              </div>
-              <button
-                class="w-full py-8 rounded-xl bg-red-500 hover:bg-red-600 active:bg-red-700 text-white font-black text-2xl tracking-[0.2em] border-b-[6px] border-red-800 shadow-xl active:shadow-none active:translate-y-1.5 transition-all flex items-center justify-center gap-3 group overflow-hidden relative"
-              >
-                <div
-                  class="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAiIGhlaWdodD0iMjAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PHBhdGggZD0iTTEgMWwyIDE4IiBzdHJva2U9InJnYmEoMCwwLDAsMC4xKSIgc3Ryb2tlLXdpZHRoPSIyIiBmaWxsPSJub25lIi8+PC9zdmc+')] opacity-20"
-                ></div>
-                <span class="material-symbols-outlined text-4xl animate-pulse"
-                  >gpp_maybe</span
-                >
-                STOP
-              </button>
+
+            <div id="card-speed" class="flex flex-col gap-2 rounded-xl p-6 bg-white dark:bg-[#1c212c] border border-slate-200 dark:border-[#282e39] shadow-sm relative overflow-hidden group">
+                <div class="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
+                    <span class="material-symbols-outlined text-6xl">speed</span>
+                </div>
+                <div class="flex items-center justify-between mb-2">
+                    <p class="text-slate-500 dark:text-slate-400 text-sm font-medium uppercase tracking-wider">Speed Mode</p>
+                </div>
+                <p id="speed-mode-text" class="text-2xl md:text-3xl font-bold text-primary">Normal</p>
+                <div class="w-full bg-slate-200 dark:bg-slate-700 rounded-full h-1.5 mt-2">
+                    <div id="speed-bar" class="bg-primary h-1.5 rounded-full" style="width: 60%"></div>
+                </div>
             </div>
-          </div>
-          <div
-            class="flex-1 bg-black rounded-xl border border-slate-700 p-5 font-mono text-xs md:text-sm overflow-hidden flex flex-col shadow-inner min-h-[250px]"
-          >
-            <div
-              class="flex justify-between items-center mb-3 pb-3 border-b border-slate-800"
-            >
-              <span
-                class="text-slate-400 uppercase tracking-wider font-bold flex items-center gap-2"
-              >
-                <span class="material-symbols-outlined text-base"
-                  >terminal</span
-                >
-                System Log
-              </span>
-              <div class="flex gap-1.5">
-                <div class="w-2.5 h-2.5 rounded-full bg-red-500/80"></div>
-                <div class="w-2.5 h-2.5 rounded-full bg-yellow-500/80"></div>
-                <div class="w-2.5 h-2.5 rounded-full bg-green-500/80"></div>
-              </div>
+
+            <div id="card-sensor" class="flex flex-col gap-2 rounded-xl p-6 bg-white dark:bg-[#1c212c] border border-slate-200 dark:border-[#282e39] shadow-sm relative overflow-hidden group">
+                <div class="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
+                    <span class="material-symbols-outlined text-6xl">sensors</span>
+                </div>
+                <div class="flex items-center justify-between mb-2">
+                    <p class="text-slate-500 dark:text-slate-400 text-sm font-medium uppercase tracking-wider">Front Sensor</p>
+                </div>
+                <p id="distance-text" class="text-2xl md:text-3xl font-bold text-white dark:text-white">1.4<span class="text-lg text-slate-400 ml-1">m</span></p>
+                <p id="sensor-msg" class="text-xs text-slate-400 dark:text-slate-500">Clear path ahead</p>
             </div>
-            <div
-              class="flex-1 overflow-y-auto log-scrollbar pr-2 flex flex-col gap-1.5 text-slate-300 leading-relaxed"
-            >
-              <p class="opacity-50 hover:opacity-100 transition-opacity">
-                <span class="text-blue-400 mr-2">[10:41:02]</span>Initializing
-                systems...
-              </p>
-              <p class="opacity-50 hover:opacity-100 transition-opacity">
-                <span class="text-blue-400 mr-2">[10:41:03]</span>Boot sequence
-                complete.
-              </p>
-              <p class="opacity-60 hover:opacity-100 transition-opacity">
-                <span class="text-blue-400 mr-2">[10:41:05]</span>Connecting to
-                Rover-Alpha-1...
-              </p>
-              <p class="bg-green-500/10 -mx-2 px-2 rounded">
-                <span class="text-green-400 mr-2">[10:41:08]</span>Connection
-                established (Ping: 24ms)
-              </p>
-              <p>
-                <span class="text-blue-400 mr-2">[10:41:15]</span>Speed mode set
-                to: NORMAL
-              </p>
-              <p class="bg-yellow-500/10 -mx-2 px-2 rounded">
-                <span class="text-yellow-400 mr-2">[10:42:30]</span>Obstacle
-                detected at 1.4m
-              </p>
-              <p>
-                <span class="text-blue-400 mr-2">[10:42:32]</span>Throttle
-                increased to 60%
-              </p>
-              <p class="opacity-80 hover:opacity-100 transition-opacity">
-                <span class="text-blue-400 mr-2">[10:42:35]</span>Adjusting
-                suspension levels...
-              </p>
-              <p class="opacity-80 hover:opacity-100 transition-opacity">
-                <span class="text-blue-400 mr-2">[10:42:41]</span>Autopilot
-                engaged
-              </p>
-              <p class="opacity-80 hover:opacity-100 transition-opacity">
-                <span class="text-blue-400 mr-2">[10:42:48]</span>Scanning
-                terrain...
-              </p>
-              <p class="bg-blue-500/10 -mx-2 px-2 rounded">
-                <span class="text-blue-300 mr-2">[10:42:55]</span>Waypoint A
-                reached
-              </p>
-              <p class="opacity-80 hover:opacity-100 transition-opacity">
-                <span class="text-blue-400 mr-2">[10:43:02]</span>Camera feed
-                active (Cam-2)
-              </p>
-              <p class="animate-pulse text-primary mt-2 font-bold">
-                <span class="mr-2">&gt;</span>Awaiting input_
-              </p>
+        </section>
+
+        <section id="control-section" class="grid grid-cols-1 lg:grid-cols-12 gap-6 flex-1 min-h-[450px]">
+            
+            <div id="manual-panel" class="lg:col-span-7 bg-white dark:bg-[#1c212c] rounded-xl border border-slate-200 dark:border-[#282e39] p-8 flex flex-col items-center justify-center relative shadow-sm">
+                <h3 class="absolute top-6 left-0 right-0 text-lg font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 text-center">Manual Control</h3>
+                <div class="flex flex-col md:flex-row items-center justify-center gap-12 md:gap-20 w-full h-full pt-8">
+                    
+                    <div id="control-drive" class="flex flex-col items-center gap-5 group">
+                        <div class="relative size-44 md:size-56 rounded-full bg-slate-100 dark:bg-[#111318] shadow-[inset_0_4px_10px_rgba(0,0,0,0.15)] border border-slate-200 dark:border-[#282e39] flex items-center justify-center">
+                            <div class="absolute inset-0 rounded-full border border-slate-200 dark:border-white/5 opacity-50"></div>
+                            <div class="absolute top-4 bottom-4 w-px bg-slate-200 dark:bg-white/5"></div>
+                            <div class="absolute left-4 right-4 h-px bg-slate-200 dark:bg-white/5"></div>
+                            <div id="drive-knob-handle" class="relative size-24 md:size-28 rounded-full bg-gradient-to-br from-slate-50 to-slate-200 dark:from-[#2a3140] dark:to-[#1c212c] shadow-[0_10px_20px_rgba(0,0,0,0.3),inset_0_2px_4px_rgba(255,255,255,0.1)] border border-slate-300 dark:border-[#3b4354] flex items-center justify-center cursor-pointer transform transition-transform active:scale-95 hover:border-primary/50">
+                                <div class="size-20 md:size-24 rounded-full bg-gradient-to-b from-transparent to-black/10 dark:to-black/30 border-[1.5px] border-dashed border-slate-400/30 dark:border-white/10 shadow-inner"></div>
+                                <div class="absolute top-3 left-1/2 -translate-x-1/2 w-8 h-4 bg-white/40 blur-md rounded-full"></div>
+                            </div>
+                        </div>
+                        <div class="flex flex-col items-center gap-1">
+                            <span class="text-sm font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400 group-hover:text-primary transition-colors">Drive</span>
+                            <span class="text-[10px] uppercase font-medium text-slate-400 dark:text-slate-600">Fwd / Rev</span>
+                        </div>
+                    </div>
+                    
+                    <div class="hidden md:block w-px h-32 bg-slate-200 dark:bg-[#282e39]"></div>
+                    
+                    <div id="control-steer" class="flex flex-col items-center gap-5 group">
+                        <div class="relative size-44 md:size-56 rounded-full bg-slate-100 dark:bg-[#111318] shadow-[inset_0_4px_10px_rgba(0,0,0,0.15)] border border-slate-200 dark:border-[#282e39] flex items-center justify-center">
+                            <div class="absolute inset-0 rounded-full border border-slate-200 dark:border-white/5 opacity-50"></div>
+                            <div class="absolute top-4 bottom-4 w-px bg-slate-200 dark:bg-white/5"></div>
+                            <div class="absolute left-4 right-4 h-px bg-slate-200 dark:bg-white/5"></div>
+                            <div id="steer-knob-handle" class="relative size-24 md:size-28 rounded-full bg-gradient-to-br from-slate-50 to-slate-200 dark:from-[#2a3140] dark:to-[#1c212c] shadow-[0_10px_20px_rgba(0,0,0,0.3),inset_0_2px_4px_rgba(255,255,255,0.1)] border border-slate-300 dark:border-[#3b4354] flex items-center justify-center cursor-pointer transform transition-transform active:scale-95 hover:border-primary/50">
+                                <div class="size-20 md:size-24 rounded-full bg-gradient-to-b from-transparent to-black/10 dark:to-black/30 border-[1.5px] border-dashed border-slate-400/30 dark:border-white/10 shadow-inner"></div>
+                                <div class="absolute top-3 left-1/2 -translate-x-1/2 w-8 h-4 bg-white/40 blur-md rounded-full"></div>
+                            </div>
+                        </div>
+                        <div class="flex flex-col items-center gap-1">
+                            <span class="text-sm font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400 group-hover:text-primary transition-colors">Steer</span>
+                            <span class="text-[10px] uppercase font-medium text-slate-400 dark:text-slate-600">Left / Right</span>
+                        </div>
+                    </div>
+                </div>
             </div>
-          </div>
-        </div>
-      </section>
+
+            <div class="lg:col-span-5 flex flex-col gap-6">
+                <div id="buttons-panel" class="bg-white dark:bg-[#1c212c] rounded-xl border border-slate-200 dark:border-[#282e39] p-6 flex flex-col gap-5 shadow-sm">
+                    <button id="btn-system-connect" class="w-full py-4 rounded-lg bg-emerald-600/10 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 font-bold border border-emerald-600/20 hover:bg-emerald-600/20 transition-all flex items-center justify-center gap-2 group">
+                        <span class="material-symbols-outlined group-hover:animate-pulse">link</span>
+                        SYSTEM CONNECTED
+                    </button>
+                    
+                    <div class="h-px bg-slate-200 dark:bg-slate-800"></div>
+                    
+                    <div class="flex flex-col gap-2">
+                        <div class="flex justify-between items-end">
+                            <label class="text-xs uppercase font-bold text-slate-400 tracking-wider">Emergency Override</label>
+                            <span id="emergency-status" class="text-[10px] bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 px-2 py-0.5 rounded uppercase font-bold">Active</span>
+                        </div>
+                        <button id="btn-emergency-stop" class="w-full py-8 rounded-xl bg-red-500 hover:bg-red-600 active:bg-red-700 text-white font-black text-2xl tracking-[0.2em] border-b-[6px] border-red-800 shadow-xl active:shadow-none active:translate-y-1.5 transition-all flex items-center justify-center gap-3 group overflow-hidden relative">
+                            <div class="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAiIGhlaWdodD0iMjAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PHBhdGggZD0iTTEgMWwyIDE4IiBzdHJva2U9InJnYmEoMCwwLDAsMC4xKSIgc3Ryb2tlLXdpZHRoPSIyIiBmaWxsPSJub25lIi8+PC9zdmc+')] opacity-20"></div>
+                            <span class="material-symbols-outlined text-4xl animate-pulse">gpp_maybe</span>
+                            STOP
+                        </button>
+                    </div>
+                </div>
+
+                <div id="log-panel" class="flex-1 bg-black rounded-xl border border-slate-700 p-5 font-mono text-xs md:text-sm overflow-hidden flex flex-col shadow-inner min-h-[250px]">
+                    <div class="flex justify-between items-center mb-3 pb-3 border-b border-slate-800">
+                        <span class="text-slate-400 uppercase tracking-wider font-bold flex items-center gap-2">
+                            <span class="material-symbols-outlined text-base">terminal</span>
+                            System Log
+                        </span>
+                        <div class="flex gap-1.5">
+                            <div class="w-2.5 h-2.5 rounded-full bg-red-500/80"></div>
+                            <div class="w-2.5 h-2.5 rounded-full bg-yellow-500/80"></div>
+                            <div class="w-2.5 h-2.5 rounded-full bg-green-500/80"></div>
+                        </div>
+                    </div>
+                    <div id="log-content" class="flex-1 overflow-y-auto log-scrollbar pr-2 flex flex-col gap-1.5 text-slate-300 leading-relaxed min-h-[250px] max-h-[400px]">
+                        <p class="opacity-50 hover:opacity-100 transition-opacity"><span class="text-blue-400 mr-2">[10:41:02]</span>Initializing systems...</p>
+                        <p class="animate-pulse text-primary mt-2 font-bold"><span class="mr-2">&gt;</span>Awaiting input_</p>
+                    </div>
+                </div>
+            </div>
+        </section>
     </main>
-  </body>
+        <script type="module">
+      import RoverController from "/code/frontend/controller/RoverController.js";
+      new RoverController();
+    </script>
+</body>
 </html>

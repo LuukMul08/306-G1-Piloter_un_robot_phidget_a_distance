@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8" />
+  <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+  <title>Guide - Commandes de la manette</title>
+  <script src="https://cdn.tailwindcss.com?plugins=forms,typography"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&amp;display=swap"
+    rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet" />
+  <script>
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          colors: {
+            primary: "#107C10", // Xbox Green-ish
+            "background-light": "#F3F4F6",
+            "background-dark": "#111827",
+            "surface-light": "#FFFFFF",
+            "surface-dark": "#1F2937",
+            "text-light": "#1F2937",
+            "text-dark": "#F9FAFB",
+            "accent-red": "#EF4444",
+            "accent-blue": "#3B82F6",
+            "accent-yellow": "#EAB308",
+          },
+          fontFamily: {
+            display: ["Inter", "sans-serif"],
+            sans: ["Inter", "sans-serif"],
+          },
+          borderRadius: {
+            DEFAULT: "0.5rem",
+            'xl': "1rem",
+            '2xl': "1.5rem",
+          },
+        },
+      },
+    };
+  </script>
+</head>
+
+<body
+  class="bg-background-light dark:bg-background-dark text-text-light dark:text-text-dark font-sans transition-colors duration-200 min-h-screen flex flex-col">
+  <nav class="bg-surface-light dark:bg-surface-dark border-b border-gray-200 dark:border-gray-700 sticky top-0 z-50">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex justify-between h-16">
+        <div class="flex items-center">
+          <div class="flex-shrink-0 flex items-center gap-2">
+            <span class="material-icons text-primary text-3xl">sports_esports</span>
+            <span class="font-bold text-xl tracking-tight">ControllerGuide</span>
+          </div>
+          <div class="hidden sm:ml-8 sm:flex sm:space-x-8">
+            <a class="border-primary text-gray-900 dark:text-white inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium"
+              href="./controllerGuide.html">
+              Contrôle de la manette
+            </a>
+            <a class="border-transparent text-gray-500 dark:text-gray-400 hover:border-gray-300 hover:text-gray-700 dark:hover:text-gray-200 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium"
+              href="./keyboardGuide.html">
+              Contrôle du clavier
+            </a>
+          </div>
+        </div>
+        <div class="flex items-center">
+          <button
+            class="p-2 rounded-full text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary"
+            onclick="document.documentElement.classList.toggle('dark')">
+            <span class="material-icons dark:hidden">dark_mode</span>
+            <span class="material-icons hidden dark:block">light_mode</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </nav>
+  <main class="flex-grow py-10 px-4 sm:px-6 lg:px-8">
+    <div class="max-w-6xl mx-auto space-y-12">
+      <div class="text-center space-y-4">
+        <h1 class="text-4xl font-extrabold tracking-tight sm:text-5xl">
+          Mouvements et actions avancés
+        </h1>
+        <p class="max-w-2xl mx-auto text-xl text-gray-500 dark:text-gray-400">
+          Maîtrisez les commandes du robot phidget grâce à des actions précises sur la gâchette et des combinaisons de
+          boutons.
+        </p>
+      </div>
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
+        <div
+          class="bg-surface-light dark:bg-surface-dark rounded-2xl shadow-xl overflow-hidden border border-gray-200 dark:border-gray-700 flex flex-col h-full">
+          <div
+            class="p-6 border-b border-gray-200 dark:border-gray-700 flex justify-between items-center bg-gray-50 dark:bg-gray-800/50">
+            <h2 class="text-xl font-bold flex items-center gap-2">
+              <span class="material-icons text-primary">gamepad</span>
+              Fonctions principales
+            </h2>
+            <span
+              class="px-3 py-1 bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-100 text-xs font-semibold rounded-full uppercase tracking-wide">Vue
+              du haut</span>
+          </div>
+          <div class="p-8 flex justify-center bg-white dark:bg-gray-900 relative">
+            <div class="relative w-full max-w-md aspect-video">
+              <img alt="Xbox Controller Front View" class="w-full h-full object-contain filter drop-shadow-2xl"
+                src="/code/frontend/img/xbox.png" />
+            </div>
+          </div>
+          <div class="p-6 space-y-4 flex-grow">
+            <h3 class="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Combinaisons de
+              touches
+            </h3>
+            <ul class="space-y-3">
+              <li class="flex items-start">
+                <div
+                  class="flex-shrink-0 h-8 w-8 flex items-center justify-center rounded-full bg-red-100 dark:bg-red-900 text-red-600 dark:text-red-200 font-bold border border-red-200 dark:border-red-700">
+                  B</div>
+                <div class="ml-4">
+                  <p class="text-sm font-medium text-gray-900 dark:text-white">Arrêt d'urgence</p>
+                  <p class="text-sm text-gray-500 dark:text-gray-400">Coupe instantanément l'alimentation électrique du
+                    moteur.
+                  </p>
+                </div>
+              </li>
+              <li class="flex items-start">
+                <div
+                  class="flex-shrink-0 h-8 w-8 flex items-center justify-center rounded-full bg-yellow-100 dark:bg-yellow-900 text-yellow-600 dark:text-yellow-200 font-bold border border-yellow-200 dark:border-yellow-700">
+                  Y</div>
+                <div class="ml-4">
+                  <p class="text-sm font-medium text-gray-900 dark:text-white">Passez à la vitesse supérieure</p>
+                  <p class="text-sm text-gray-500 dark:text-gray-400">Augmentez le rapport de transmission pour
+                    atteindre des vitesses plus élevées.</p>
+                </div>
+              </li>
+              <li class="flex items-start">
+                <div
+                  class="flex-shrink-0 h-8 w-8 flex items-center justify-center rounded-full bg-green-100 dark:bg-green-900 text-green-600 dark:text-green-200 font-bold border border-green-200 dark:border-green-700">
+                  A</div>
+                <div class="ml-4">
+                  <p class="text-sm font-medium text-gray-900 dark:text-white">Passez à la vitesse inférieur</p>
+                  <p class="text-sm text-gray-500 dark:text-gray-400">Réduire le rapport de transmission pour augmenter
+                    le couple.</p>
+                </div>
+              </li>
+              <li class="flex items-start">
+                <div
+                  class="flex-shrink-0 h-8 w-8 flex items-center justify-center rounded-full bg-pink-100 dark:bg-gray-800 text-pink-600 dark:text-gray-300 font-bold border border-gray-200 dark:border-gray-600">
+                  L</div>
+                <div class="ml-4">
+                  <p class="text-sm font-medium text-gray-900 dark:text-white">Joystick gauche</p>
+                  <p class="text-sm text-gray-500 dark:text-gray-400">Avancer / Reculer (contrôle précis).</p>
+                </div>
+              </li>
+              <li class="flex items-start">
+                <div
+                  class="flex-shrink-0 h-8 w-8 flex items-center justify-center rounded-full bg-orange-100 dark:bg-orange-800 text-orange-600 dark:text-gray-300 font-bold border border-gray-200 dark:border-gray-600">
+                  R</div>
+                <div class="ml-4">
+                  <p class="text-sm font-medium text-gray-900 dark:text-white">Joystick right</p>
+                  <p class="text-sm text-gray-500 dark:text-gray-400">Tournez à gauche / Tournez à droite</p>
+                </div>
+              </li>
+            </ul>
+          </div>
+        </div>
+        <div
+          class="bg-surface-light dark:bg-surface-dark rounded-2xl shadow-xl overflow-hidden border border-gray-200 dark:border-gray-700 flex flex-col h-full">
+          <div
+            class="p-6 border-b border-gray-200 dark:border-gray-700 flex justify-between items-center bg-gray-50 dark:bg-gray-800/50">
+            <h2 class="text-xl font-bold flex items-center gap-2">
+              <span class="material-icons text-primary">speed</span>
+              Contrôle de la vitesse
+            </h2>
+            <span
+              class="px-3 py-1 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-100 text-xs font-semibold rounded-full uppercase tracking-wide">Vue
+              du devant</span>
+          </div>
+          <div class="p-8 flex justify-center bg-white dark:bg-gray-900 relative">
+            <div class="relative w-full max-w-md aspect-video">
+              <img alt="Xbox Controller Rear View" class="w-full h-full object-contain filter drop-shadow-2xl"
+                src="/code/frontend/img/xbox2.png" />
+            </div>
+          </div>
+          <div class="p-6 space-y-6 flex-grow">
+            <div>
+              <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-2">Accélération linéaire</h3>
+              <p class="text-gray-500 dark:text-gray-400 text-sm">
+                Les gâchettes permettent un contrôle analogique. Une pression légère déplace le véhicule lentement,
+                tandis qu'une pression complète
+                active la puissance maximale.
+              </p>
+            </div>
+            <div class="grid grid-cols-2 gap-4">
+              <div class="bg-gray-50 dark:bg-gray-800 p-4 rounded-xl border border-gray-100 dark:border-gray-700">
+                <div class="flex items-center justify-between mb-2">
+                  <span class="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase">Right Trigger</span>
+                  <span
+                    class="px-2 py-0.5 rounded text-xs font-bold bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300">RT</span>
+                </div>
+                <div class="text-primary font-bold text-lg mb-1">Avancer</div>
+                <p class="text-xs text-gray-500 dark:text-gray-400">Main throttle. Controls forward acceleration.</p>
+              </div>
+              <div class="bg-gray-50 dark:bg-gray-800 p-4 rounded-xl border border-gray-100 dark:border-gray-700">
+                <div class="flex items-center justify-between mb-2">
+                  <span class="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase">Left Trigger</span>
+                  <span
+                    class="px-2 py-0.5 rounded text-xs font-bold bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300">LT</span>
+                </div>
+                <div class="text-accent-red font-bold text-lg mb-1">Freiner / Reculer</div>
+                <p class="text-xs text-gray-500 dark:text-gray-400">Freinage. Contrôle le mouvement vers l'arrière.</p>
+              </div>
+            </div>
+            <div class="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
+              <div class="flex items-start gap-3">
+                <span class="material-icons text-yellow-500 text-xl">lightbulb</span>
+                <p class="text-sm text-gray-600 dark:text-gray-300">
+                  <span class="font-bold">Conseil de pro:</span> Combiner <span class="font-bold">LT</span> (Left
+                  Trigger) tout en avançant agit comme un frein dynamique pour des virages plus serrés.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="bg-primary/10 dark:bg-primary/5 rounded-xl p-8 text-center border border-primary/20">
+        <h3 class="text-2xl font-bold text-gray-900 dark:text-white mb-4">Pret à essayer de robot phidget?</h3>
+        <p class="text-gray-600 dark:text-gray-300 mb-8 max-w-2xl mx-auto">
+          Lancez l'application pour vous entraîner à utiliser ces commandes.
+        </p>
+        <button
+          class="bg-primary hover:bg-green-700 text-white font-bold py-3 px-8 rounded-full shadow-lg transform transition hover:-translate-y-0.5 focus:outline-none focus:ring-4 focus:ring-green-500/50 flex items-center gap-2 mx-auto">
+          <span class="material-icons">play_arrow</span>
+          Lancez l'application
+        </button>
+      </div>
+    </div>
+  </main>
+  <footer class="bg-surface-light dark:bg-surface-dark border-t border-gray-200 dark:border-gray-700 py-8">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex justify-center items-center">
+      <p class="text-sm text-gray-500 dark:text-gray-400 text-center">
+        © 2026 ControllerGuide App.
+      </p>
+    </div>
+  </footer>
+</body>
+
+</html>

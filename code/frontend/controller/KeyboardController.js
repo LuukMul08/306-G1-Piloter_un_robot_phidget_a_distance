@@ -1,7 +1,7 @@
 import RoverModel from "../model/RoverModel.js";
 import RoverView from "../view/RoverView.js";
 
-const WS_URL = "ws://localhost:8080"; // ggf. IP anpassen, wenn remote
+const WS_URL = "ws://localhost:8080"; // ggf. IP anpassen
 const CLIENT_ID_KEY = "rover-client-id";
 
 function getClientId() {
@@ -22,9 +22,7 @@ export default class RoverController {
   lastDistanceBlockLog = 0;
   distanceLogCooldown = 1000;
 
-  reconnectInterval = 2000;
-  lastReconnectAttempt = 0;
-  triedConnectThisAttempt = false;
+  status = "NOT CONNECTED"; // NOT CONNECTED | CONNECTING | CONNECTED | DISCONNECTED
 
   constructor() {
     this.clientId = getClientId();
@@ -35,31 +33,12 @@ export default class RoverController {
     window.addEventListener("keydown", (e) => this.handleKey(e, true));
     window.addEventListener("keyup", (e) => this.handleKey(e, false));
     this.bindButtons();
-
-    setInterval(() => this.reconnectCheck(), 500);
-  }
-
-  reconnectCheck() {
-    const now = Date.now();
-    if (
-      !this.ws ||
-      this.ws.readyState === WebSocket.CLOSED ||
-      this.ws.readyState === WebSocket.CLOSING
-    ) {
-      if (now - this.lastReconnectAttempt >= this.reconnectInterval) {
-        this.lastReconnectAttempt = now;
-        this.triedConnectThisAttempt = false;
-        this.connectWebSocket();
-      }
-    }
   }
 
   connectWebSocket() {
-    if (this.triedConnectThisAttempt) return;
-    this.triedConnectThisAttempt = true;
-
-    this.view.addLog("Trying to connect WebSocket…", "INFO");
+    this.status = "CONNECTING";
     this.view.updateStatus("CONNECTING…", false);
+    this.view.addLog("Trying to connect WebSocket…", "INFO");
 
     this.ws = new WebSocket(WS_URL);
 
@@ -70,17 +49,20 @@ export default class RoverController {
     };
 
     this.ws.onclose = () => {
-      this.view.addLog("WebSocket disconnected", "WARN");
-      this.view.updateStatus("NOT CONNECTED", false);
+      if (this.status !== "DISCONNECTED") {
+        this.status = "DISCONNECTED";
+        this.view.addLog("WebSocket disconnected", "WARN");
+        this.view.updateStatus("DISCONNECTED", false);
+      }
       this.ws = null;
-      this.triedConnectThisAttempt = false;
     };
 
     this.ws.onerror = (event) => {
       console.error("WebSocket error:", event);
       this.view.addLog("WebSocket error (siehe Konsole)", "ERROR");
       this.ws = null;
-      this.triedConnectThisAttempt = false;
+      this.status = "DISCONNECTED";
+      this.view.updateStatus("DISCONNECTED", false);
     };
 
     this.ws.onmessage = (e) => this.handleWsMessage(e);
@@ -90,15 +72,30 @@ export default class RoverController {
     try {
       const data = JSON.parse(e.data);
 
+      // --- Handshake / Rover verbunden ---
       if (data.type === "rover_connected") {
+        this.status = "CONNECTED";
         this.view.addLog(
           data.reconnect ? "Reconnected to rover" : "Connected to rover",
           "INFO"
         );
-        this.view.updateStatus("CONNECTED", true); // Erst hier auf CONNECTED setzen
+        this.view.updateStatus("CONNECTED", true);
       }
 
-      // Distance-Update
+      // --- Phidget Status ---
+      if (data.type === "phidget_status") {
+        if (data.status === "connected") {
+          this.status = "CONNECTED";
+          this.view.addLog("Phidget ready", "INFO");
+          this.view.updateStatus("CONNECTED", true);
+        } else if (data.status === "error") {
+          this.status = "DISCONNECTED";
+          this.view.addLog(`Phidget error: ${data.message}`, "ERROR");
+          this.view.updateStatus("DISCONNECTED", false);
+        }
+      }
+
+      // --- Distance Sensor ---
       if (data.distance != null) {
         const prev = this.model.distance;
         this.model.updateDistance(parseFloat(data.distance));
@@ -109,16 +106,19 @@ export default class RoverController {
           (this.model.distance < 300 &&
             now - this.lastDistanceBlockLog > this.distanceLogCooldown)
         ) {
-          this.view.addLog(
-            `Distance critical: ${this.model.distance} mm`,
-            "WARN"
-          );
+          this.view.addLog(`Distance critical: ${this.model.distance} mm`, "WARN");
           this.lastDistanceBlockLog = now;
         }
 
         const el = document.getElementById("distanceDisplay");
         if (el) el.textContent = (this.model.distance / 1000).toFixed(2) + " m";
       }
+
+      // --- Server Logs ---
+      if (data.type === "log" && data.message) {
+        this.view.addLog(`[Server] ${data.message}`, "INFO");
+      }
+
     } catch (err) {
       console.error("WebSocket parse error:", err);
       this.view.addLog(`WebSocket parse error: ${err.message}`, "ERROR");
@@ -156,39 +156,31 @@ export default class RoverController {
       this.view.addLog(`STOP: ${this.model.stopActive}`, "INFO");
     }
 
-    // Speed-Modus erhöhen/vermindern
     if (pressed) {
       if (key === "Q") {
         this.model.speedMode = Math.max(1, this.model.speedMode - 1);
-        this.view.addLog(
-          `Speed mode lowered to ${this.model.speedMode}`,
-          "INFO"
-        );
-        this.view.updateUI({
-          speedMode: this.model.speedMode,
-          speedLock: this.model.speedLock,
-          stopActive: this.model.stopActive,
-          distance: this.model.distance,
-        });
+        this.view.addLog(`Speed mode lowered to ${this.model.speedMode}`, "INFO");
       } else if (key === "E") {
         this.model.speedMode = Math.min(3, this.model.speedMode + 1);
-        this.view.addLog(
-          `Speed mode increased to ${this.model.speedMode}`,
-          "INFO"
-        );
-        this.view.updateUI({
-          speedMode: this.model.speedMode,
-          speedLock: this.model.speedLock,
-          stopActive: this.model.stopActive,
-          distance: this.model.distance,
-        });
+        this.view.addLog(`Speed mode increased to ${this.model.speedMode}`, "INFO");
       }
+      this.view.updateUI({
+        speedMode: this.model.speedMode,
+        speedLock: this.model.speedLock,
+        stopActive: this.model.stopActive,
+        distance: this.model.distance,
+      });
     }
 
     this.keysPressed[key] = pressed;
   };
 
   loop = () => {
+    if (this.status !== "CONNECTED") {
+      requestAnimationFrame(this.loop);
+      return; // Commands nicht senden, solange Phidget nicht bereit
+    }
+
     let forward =
       (this.keysPressed.W || this.keysPressed.ArrowUp ? 1 : 0) -
       (this.keysPressed.S || this.keysPressed.ArrowDown ? 1 : 0);
@@ -217,6 +209,7 @@ export default class RoverController {
         })
       );
     }
+
     this.view.updateUI({
       speedMode: this.model.speedMode,
       speedLock: this.model.speedLock,
