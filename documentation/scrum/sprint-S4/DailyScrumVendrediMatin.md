@@ -9,7 +9,7 @@
 
 ### Luuk
 
-- Dévélepper la page du clavier
+- Dévélopper la page du clavier
 - Fait la page pour choisir entre clavier et manette
 - Merge entre dashboard et le reste
 
