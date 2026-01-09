@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>Phidget Connection Dashboard</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,typography"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&amp;display=swap"
+        rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet" />
+    <link rel="icon" href="data:," /> <!-- Placeholder favicon to prevent 404 -->
+    <script type="module" src="/code/frontend/dashboard.js"></script>
+    <script>
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        primary: "#107C10", // Xbox Green-ish
+                        "background-light": "#F3F4F6",
+                        "background-dark": "#111827",
+                        "surface-light": "#FFFFFF",
+                        "surface-dark": "#1F2937",
+                        "text-light": "#1F2937",
+                        "text-dark": "#F9FAFB",
+                        "accent-red": "#EF4444",
+                        "accent-blue": "#3B82F6",
+                        "accent-yellow": "#EAB308",
+                    },
+                    fontFamily: {
+                        display: ["Inter", "sans-serif"],
+                        sans: ["Inter", "sans-serif"],
+                    },
+                    borderRadius: {
+                        DEFAULT: "0.5rem",
+                        'xl': "1rem",
+                        '2xl': "1.5rem",
+                    },
+                },
+            },
+        };
+    </script>
+</head>
+
+<body
+    class="bg-background-light dark:bg-background-dark text-text-light dark:text-text-dark font-sans transition-colors duration-200 min-h-screen flex flex-col">
+    <nav class="bg-surface-light dark:bg-surface-dark border-b border-gray-200 dark:border-gray-700 sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0 flex items-center gap-3">
+                        <div class="bg-primary/10 p-2 rounded-lg">
+                            <span class="material-icons text-primary text-2xl">cable</span>
+                        </div>
+                        <span class="font-bold text-xl tracking-tight">PhidgetControl</span>
+                    </div>
+                </div>
+                <div class="flex items-center gap-4">
+                    <a class="hidden sm:inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-lg shadow-sm text-white bg-primary hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary transition-all"
+                        href="#">
+                        <span class="material-icons text-sm mr-2">menu_book</span>
+                        Guide
+                    </a>
+                    <div class="h-6 w-px bg-gray-200 dark:bg-gray-700 mx-2 hidden sm:block"></div>
+                    <button
+                        class="p-2 rounded-full text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary"
+                        onclick="document.documentElement.classList.toggle('dark')">
+                        <span class="material-icons dark:hidden">dark_mode</span>
+                        <span class="material-icons hidden dark:block">light_mode</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </nav>
+    <main class="flex-grow flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 relative overflow-hidden">
+        <div class="absolute inset-0 z-0 opacity-10 dark:opacity-5 pointer-events-none">
+            <div class="absolute top-0 left-1/4 w-96 h-96 bg-primary rounded-full blur-3xl mix-blend-multiply filter">
+            </div>
+            <div
+                class="absolute bottom-0 right-1/4 w-96 h-96 bg-accent-blue rounded-full blur-3xl mix-blend-multiply filter">
+            </div>
+        </div>
+        <div class="max-w-md w-full space-y-8 z-10">
+            <div class="text-center">
+                <h2 class="mt-6 text-3xl font-extrabold text-gray-900 dark:text-white">
+                    Connect to Phidget
+                </h2>
+                <p class="mt-2 text-sm text-gray-600 dark:text-gray-400">
+                    Enter your network configuration details below to establish a connection with the hardware
+                    interface.
+                </p>
+            </div>
+            <div
+                class="bg-surface-light dark:bg-surface-dark py-8 px-4 shadow-2xl shadow-black/10 dark:shadow-black/40 rounded-2xl sm:px-10 border border-gray-200 dark:border-gray-700 backdrop-blur-sm bg-opacity-95 dark:bg-opacity-95">
+                <div class="flex justify-center mb-8">
+                    <div class="relative">
+                        <div
+                            class="w-20 h-20 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center border-4 border-gray-200 dark:border-gray-700">
+                            <span class="material-icons text-gray-400 text-4xl">link_off</span>
+                        </div>
+                        <div
+                            class="absolute bottom-0 right-0 w-6 h-6 bg-accent-red rounded-full border-4 border-surface-light dark:border-surface-dark">
+                        </div>
+                    </div>
+                </div>
+                <form action="#" class="space-y-6" method="POST">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300" for="ip-address">
+                            IP Address
+                        </label>
+                        <div class="mt-1 relative rounded-md shadow-sm">
+                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                <span class="material-icons text-gray-400 text-lg">dns</span>
+                            </div>
+                            <input
+                                class="block w-full pl-10 pr-3 py-3 border-gray-300 dark:border-gray-600 rounded-xl leading-5 bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary sm:text-sm transition-colors"
+                                id="ip-address" name="ip-address" placeholder="192.168.1.10" type="text" required />
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300" for="port">
+                            Port
+                        </label>
+                        <div class="mt-1 relative rounded-md shadow-sm">
+                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                <span class="material-icons text-gray-400 text-lg">settings_ethernet</span>
+                            </div>
+                            <input
+                                class="block w-full pl-10 pr-3 py-3 border-gray-300 dark:border-gray-600 rounded-xl leading-5 bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary sm:text-sm transition-colors"
+                                id="port" name="port" placeholder="5661" type="number" required />
+                        </div>
+                    </div>
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center">
+                            <input
+                                class="h-4 w-4 text-primary focus:ring-primary border-gray-300 rounded dark:bg-gray-800 dark:border-gray-600"
+                                id="remember-me" name="remember-me" type="checkbox" />
+                            <label class="ml-2 block text-sm text-gray-900 dark:text-gray-300" for="remember-me">
+                                Auto-connect
+                            </label>
+                        </div>
+                    </div>
+                    <div>
+                        <button
+                            class="w-full flex justify-center py-3 px-4 border border-transparent rounded-xl shadow-sm text-sm font-bold text-white bg-primary hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary transition-transform transform hover:-translate-y-0.5"
+                            type="submit">
+                            <span class="material-icons mr-2">login</span>
+                            Connect
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </main>
+    <footer class="bg-surface-light dark:bg-surface-dark border-t border-gray-200 dark:border-gray-700 py-6">
+        <div
+            class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row justify-between items-center gap-4">
+            <p class="text-xs text-gray-500 dark:text-gray-400">
+                © 2026 PhidgetControl Dashboard.
+            </p>
+            <div class="flex space-x-6 items-center">
+                <div class="flex items-center gap-2">
+                    <span class="h-2 w-2 rounded-full bg-accent-red animate-pulse"></span>
+                    <span id="connection-status" class="text-xs text-gray-500 dark:text-gray-400">Backend Server Disconnected</span>
+                </div>
+            </div>
+            <div class="flex space-x-6 items-center">
+                <div class="flex items-center gap-2">
+                    <span class="h-2 w-2 rounded-full bg-accent-red animate-pulse"></span>
+                    <span class="text-xs text-gray-500 dark:text-gray-400">Phidget Network Server Disconnected</span>
+                </div>
+            </div>
+        </div>
+    </footer>
+</body>
+
+</html>
