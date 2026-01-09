@@ -1,52 +1,82 @@
-import { WebSocketServer } from 'ws';
-import * as phidget22 from 'phidget22';
+import { WebSocketServer } from "ws";
+import * as phidget22 from "phidget22";
 
-import RoverModel from './model/RoverModel.js';
-import RoverView from './view/RoverView.js';
-import RoverController from './controller/RoverController.js';
+import RoverModel from "./model/RoverModel.js";
+import RoverView from "./view/RoverView.js";
+import RoverController from "./controller/RoverController.js";
 
-/**
- * Point d'entrée du serveur Rover.
- * Initialise le serveur WebSocket, le hub Phidget et les composants MVC.
- */
+const PORT = 8080;
+const HUB_IP = "10.18.1.126";
+const clients = new Map(); // clientId -> { ws, controller }
+
 async function main() {
-  // --- Serveur WebSocket ---
-  const wss = new WebSocketServer({ port: 8080 });
-  console.log('✅ Serveur WebSocket démarré sur ws://localhost:8080');
+  const wss = new WebSocketServer({ port: PORT, host: "0.0.0.0" });
+  console.log(`✅ WebSocket Server läuft auf ws://localhost:${PORT}`);
 
-  // --- Connexion au hub Phidget ---
-  const hubIP = '10.18.1.126';
-  const conn = new phidget22.NetworkConnection(5661, hubIP);
+  const conn = new phidget22.NetworkConnection(5661, HUB_IP);
+  await conn.connect();
+  console.log(`✅ Verbunden mit Phidget Hub ${HUB_IP}`);
 
-  try {
-    await conn.connect();
-    console.log(`✅ Connecté au hub Phidget ${hubIP}`);
-  } catch (err) {
-    console.error('❌ Erreur lors de la connexion au hub :', err);
-    process.exit(1);
-  }
-
-  // --- Initialisation du modèle (motors + capteur de distance) ---
   const model = new RoverModel();
-  await model.initMotors(667784, 667784, 0, 1);          // Initialise les moteurs gauche et droit
-  await model.initDistanceSensor(667784, 0);             // Initialise le capteur de distance
+  await model.initMotors(667784, 667784, 0, 1);
+  await model.initDistanceSensor(667784, 0);
 
-  // --- Initialisation de la vue ---
   const view = new RoverView();
 
-  // --- Gestion du signal SIGINT (CTRL+C) pour arrêt propre ---
-  process.on('SIGINT', async () => {
-    console.log('🛑 Arrêt des moteurs...');
-    await model.shutdown(); // Ferme moteurs et capteurs
+  process.on("SIGINT", async () => {
+    console.log("🛑 Shutdown...");
+    await model.shutdown();
     process.exit();
   });
 
-  // --- Gestion des connexions WebSocket ---
-  wss.on('connection', ws => {
-    console.log('🔗 Client WebSocket connecté');
-    new RoverController(model, view, ws); // Crée un contrôleur pour gérer la connexion
+  wss.on("connection", ws => {
+    console.log("🔗 WS connected");
+
+    ws.on("message", msg => {
+      let data;
+      try {
+        data = JSON.parse(msg);
+      } catch {
+        return;
+      }
+
+      if (data.type === "hello") {
+        const { clientId } = data;
+        const existing = clients.get(clientId);
+        const isReconnect = !!existing;
+
+        if (isReconnect) {
+          console.log(`🔄 Reconnect von ${clientId}`);
+          // Alte Verbindung sauber schließen
+          existing.ws.close();
+          // Alten Controller ggf. stoppen
+          existing.controller?.shutdown?.();
+        } else {
+          console.log(`🆕 Neuer Client ${clientId}`);
+        }
+
+        // Neues WS & Controller speichern
+        const controller = new RoverController(model, view, ws);
+        clients.set(clientId, { ws, controller });
+
+        ws.send(JSON.stringify({
+          type: "rover_connected",
+          reconnect: isReconnect,
+        }));
+      }
+    });
+
+    ws.on("close", () => {
+      for (const [id, entry] of clients.entries()) {
+        if (entry.ws === ws) {
+          clients.delete(id);
+          console.log(`❌ Client ${id} getrennt`);
+          model.stopAll?.();
+          break;
+        }
+      }
+    });
   });
 }
 
-// --- Démarrage du serveur ---
 main();
