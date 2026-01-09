@@ -85,7 +85,7 @@ export default class RoverView {
     if (this.distanceEl) {
       this.distanceEl.innerHTML =
         distance !== null && distance !== undefined
-          ? `${(distance / 100).toFixed(1)} m`
+          ? `${(distance / 10).toFixed(1)} cm`
           : "--";
     }
   }

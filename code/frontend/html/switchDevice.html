@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>Rover Command - Select Control Mode</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,typography"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet" />
+
+    <script>
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        primary: "#107C10",
+                        "background-light": "#F3F4F6",
+                        "background-dark": "#111827",
+                        "surface-light": "#FFFFFF",
+                        "surface-dark": "#1F2937",
+                        "text-light": "#1F2937",
+                        "text-dark": "#F9FAFB",
+                        "accent-blue": "#3B82F6",
+                    },
+                    fontFamily: {
+                        sans: ["Inter", "sans-serif"],
+                    },
+                    borderRadius: {
+                        'xl': "1rem",
+                        '2xl': "1.5rem",
+                    },
+                },
+            },
+        };
+    </script>
+</head>
+
+<body
+    class="bg-background-light dark:bg-background-dark text-text-light dark:text-text-dark font-sans transition-colors duration-200 min-h-screen flex flex-col">
+
+    <nav class="bg-surface-light dark:bg-surface-dark border-b border-gray-200 dark:border-gray-700 sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0 flex items-center gap-3">
+                        <div class="bg-primary/10 p-2 rounded-lg">
+                            <span class="material-icons text-primary text-2xl">precision_manufacturing</span>
+                        </div>
+                        <span class="font-bold text-xl tracking-tight">Rover Command</span>
+                    </div>
+                </div>
+                <div class="flex items-center gap-4">
+                    <a class="hidden sm:inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-lg shadow-sm text-white bg-primary hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary transition-all"
+                        href="./Guide/controllerGuide.html">
+                        <span class="material-icons text-sm mr-2">menu_book</span>
+                        Guide
+                    </a>
+                    <div class="h-6 w-px bg-gray-200 dark:bg-gray-700 mx-2 hidden sm:block"></div>
+
+                    <button
+                        class="p-2 rounded-full text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white focus:outline-none focus:ring-2 focus:ring-primary"
+                        onclick="document.documentElement.classList.toggle('dark')">
+                        <span class="material-icons dark:hidden">dark_mode</span>
+                        <span class="material-icons hidden dark:block">light_mode</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <main class="flex-grow flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 relative overflow-hidden">
+        <div class="absolute inset-0 z-0 opacity-10 dark:opacity-5 pointer-events-none">
+            <div class="absolute top-0 left-1/4 w-96 h-96 bg-primary rounded-full blur-3xl mix-blend-multiply filter">
+            </div>
+            <div
+                class="absolute bottom-0 right-1/4 w-96 h-96 bg-accent-blue rounded-full blur-3xl mix-blend-multiply filter">
+            </div>
+        </div>
+
+        <div class="max-w-5xl w-full z-10">
+            <div class="text-center mb-12">
+                <h1 class="text-4xl font-extrabold text-gray-900 dark:text-white">Select Control Mode</h1>
+                <p class="mt-2 text-sm text-gray-600 dark:text-gray-400">Choose your preferred interface to begin the
+                    operation.</p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+
+                <div
+                    class="bg-surface-light dark:bg-surface-dark p-8 shadow-2xl rounded-2xl border border-gray-200 dark:border-gray-700 backdrop-blur-sm bg-opacity-95 flex flex-col items-center text-center transition-all hover:-translate-y-2 hover:border-primary">
+                    <div class="p-4 bg-primary/10 rounded-2xl mb-6">
+                        <span class="material-icons text-primary text-6xl">sports_esports</span>
+                    </div>
+                    <h3 class="text-2xl font-bold mb-3">Controller Control</h3>
+                    <p class="text-sm text-gray-500 dark:text-gray-400 mb-8">
+                        High-fidelity analog maneuvering using a gamepad. Recommended for smooth movement.
+                    </p>
+                    <button onclick="window.location.href='./Devices/controller.html'"
+                        class="w-full py-3 px-6 bg-primary hover:bg-green-700 text-white font-bold rounded-xl shadow-lg transition-transform active:scale-95 flex items-center justify-center gap-2">
+                        Select Mode
+                        <span class="material-icons text-sm">arrow_forward</span>
+                    </button>
+                    <div
+                        class="mt-6 flex items-center gap-2 text-emerald-500 bg-emerald-500/10 px-4 py-1.5 rounded-full">
+                        <span class="h-2 w-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                        <span class="text-xs font-bold uppercase tracking-wider">Device Connected</span>
+                    </div>
+                </div>
+
+                <div
+                    class="bg-surface-light dark:bg-surface-dark p-8 shadow-2xl rounded-2xl border border-gray-200 dark:border-gray-700 backdrop-blur-sm bg-opacity-95 flex flex-col items-center text-center transition-all hover:-translate-y-2 hover:border-accent-blue">
+                    <div class="p-4 bg-blue-500/10 rounded-2xl mb-6">
+                        <span class="material-icons text-accent-blue text-6xl">keyboard</span>
+                    </div>
+                    <h3 class="text-2xl font-bold mb-3">Keyboard Control</h3>
+                    <p class="text-sm text-gray-500 dark:text-gray-400 mb-8">
+                        Precise digital input via keyboard. Standard WASD or Arrow keys mapping.
+                    </p>
+                    <button onclick="window.location.href='./Devices/keyboard.html'"
+                        class="w-full py-3 px-6 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-text-light dark:text-white font-bold rounded-xl shadow-lg transition-transform active:scale-95 flex items-center justify-center gap-2">
+                        Select Mode
+                        <span class="material-icons text-sm">arrow_forward</span>
+                    </button>
+                    <div class="mt-6 flex items-center gap-2 text-gray-400 bg-gray-400/10 px-4 py-1.5 rounded-full">
+                        <span class="h-2 w-2 rounded-full bg-gray-400"></span>
+                        <span class="text-xs font-bold uppercase tracking-wider">Standard Input Ready</span>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </main>
+
+    <footer class="bg-surface-light dark:bg-surface-dark border-t border-gray-200 dark:border-gray-700 py-6">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col items-center justify-center">
+            <p class="text-xs text-gray-500 dark:text-gray-400 text-center">
+                © 2026 Rover Command Dashboard.
+            </p>
+        </div>
+    </footer>
+
+</body>
+
+</html>
