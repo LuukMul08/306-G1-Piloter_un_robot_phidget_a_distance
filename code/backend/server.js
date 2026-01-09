@@ -1,4 +1,5 @@
 import { WebSocketServer } from "ws";
+import net from "net";
 import * as phidget22 from "phidget22";
 import fs from "fs";
 import path from "path";
@@ -106,7 +107,39 @@ async function shutdownPhidget() {
 }
 
 async function main() {
+  // Prüfe, ob der Port verfügbar ist, um EADDRINUSE frühzeitig zu erkennen
+  async function isPortFree(port, host = "0.0.0.0") {
+    return new Promise((resolve) => {
+      const tester = net.createServer()
+        .once("error", (err) => {
+          if (err && err.code === "EADDRINUSE") resolve(false);
+          else resolve(false);
+        })
+        .once("listening", () => {
+          tester.close(() => resolve(true));
+        })
+        .listen(port, host);
+    });
+  }
+
+  const portFree = await isPortFree(PORT, "0.0.0.0");
+  if (!portFree) {
+    console.error(`❌ Port ${PORT} bereits in Benutzung. Bitte beende den anderen Prozess oder wähle einen anderen Port.`);
+    process.exit(1);
+  }
+
   const wss = new WebSocketServer({ port: PORT, host: "0.0.0.0" });
+  wss.on("error", async (err) => {
+    console.error("❌ WebSocket Server error:", err);
+    if (err && err.code === "EADDRINUSE") {
+      console.error(`❌ Port ${PORT} bereits in Benutzung (EADDRINUSE)`);
+      try {
+        await shutdownPhidget();
+      } catch (e) {}
+      process.exit(1);
+    }
+  });
+
   console.log(`✅ WebSocket Server läuft auf ws://localhost:${PORT}`);
 
   const model = new RoverModel();
