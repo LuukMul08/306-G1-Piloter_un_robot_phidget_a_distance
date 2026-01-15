@@ -1,10 +1,10 @@
 import RoverModel from "../model/RoverModel.js";
 import RoverView from "../view/RoverView.js";
 
-const WS_URL = "ws://localhost:8080"; // Modifier si nécessaire l'adresse IP
-const CLIENT_ID_KEY = "rover-client-id";
+const WS_URL = "ws://localhost:8080"; // URL du WebSocket
+const CLIENT_ID_KEY = "rover-client-id"; // Clé pour stocker l'ID unique du client
 
-// Récupère ou génère une ID unique pour le client
+// Récupère ou génère un ID unique pour le client
 function getClientId() {
   let id = localStorage.getItem(CLIENT_ID_KEY);
   if (!id) {
@@ -15,37 +15,47 @@ function getClientId() {
 }
 
 export default class RoverController {
-  model = new RoverModel();
-  view = new RoverView();
-  ws = null;
-  controllerActive = false;
+  model = new RoverModel(); // Modèle du Rover
+  view = new RoverView();   // Vue pour l'interface
+  ws = null;                // WebSocket
+  controllerActive = false; // État du gamepad
 
-  lastDistanceBlockLog = 0;
-  distanceLogCooldown = 1000; // 1 seconde entre les alertes
+  lastDistanceBlockLog = 0;        // Temps dernier log de blocage distance
+  distanceLogCooldown = 1000;      // Délai entre deux alertes distance critique (ms)
 
-  status = "NOT CONNECTED"; // NOT CONNECTED | CONNECTING | CONNECTED | DISCONNECTED
-  clientId = getClientId();
+  status = "NOT CONNECTED";        // État du rover
+  clientId = getClientId();        // ID unique client
+
+  // Suivi de l'état précédent des boutons pour détecter les changements
+  prevBtnX = false; // Toggle STOP
+  prevBtnA = false; // Bouton vitesse -
+  prevBtnY = false; // Bouton vitesse +
 
   constructor() {
+    // Connexion WebSocket et lancement de la boucle principale
     this.connectWebSocket();
     this.loop();
 
-    // Événements Gamepad pour connexion/déconnexion
-    window.addEventListener("gamepadconnected", (e) => this.handleGamepadConnect(e));
-    window.addEventListener("gamepaddisconnected", (e) => this.handleGamepadDisconnect(e));
+    // Gestion des événements de connexion/déconnexion du gamepad
+    window.addEventListener("gamepadconnected", (e) =>
+      this.handleGamepadConnect(e)
+    );
+    window.addEventListener("gamepaddisconnected", (e) =>
+      this.handleGamepadDisconnect(e)
+    );
   }
 
-  // Établir la connexion WebSocket
+  // Connexion WebSocket
   connectWebSocket() {
     this.status = "CONNECTING";
-    this.view.updateStatus("CONNECTING…", false);
+    this.view.updateStatus("CONNECTING…", false); 
     this.view.addLog("Tentative de connexion WebSocket…", "INFO");
 
     this.ws = new WebSocket(WS_URL);
 
     this.ws.onopen = () => {
       this.view.addLog("WebSocket connecté", "INFO");
-      // Envoyer le message HELLO au serveur
+      // Envoi d'un message "hello" au serveur
       this.ws.send(JSON.stringify({ type: "hello", clientId: this.clientId }));
     };
 
@@ -69,12 +79,12 @@ export default class RoverController {
     this.ws.onmessage = (e) => this.handleWsMessage(e);
   }
 
-  // Traiter les messages reçus via WebSocket
+  // Gestion des messages WebSocket
   handleWsMessage(e) {
     try {
       const data = JSON.parse(e.data);
 
-      // --- Handshake / Rover connecté ---
+      // Rover connecté
       if (data.type === "rover_connected") {
         this.status = "CONNECTED";
         this.view.addLog(
@@ -84,7 +94,7 @@ export default class RoverController {
         this.view.updateStatus("CONNECTED", true);
       }
 
-      // --- Statut Phidget ---
+      // Statut Phidget
       if (data.type === "phidget_status") {
         if (data.status === "connected") {
           this.status = "CONNECTED";
@@ -97,33 +107,37 @@ export default class RoverController {
         }
       }
 
-      // --- Capteur de distance ---
+      // Distance
       if (data.distance != null) {
         const prev = this.model.distance;
         this.model.updateDistance(parseFloat(data.distance));
 
         const now = Date.now();
+        // Log distance critique si < 300mm
         if (
           prev === null ||
-          (this.model.distance < 300 && now - this.lastDistanceBlockLog > this.distanceLogCooldown)
+          (this.model.distance < 300 &&
+            now - this.lastDistanceBlockLog > this.distanceLogCooldown)
         ) {
-          this.view.addLog(`Distance critique : ${this.model.distance} mm`, "WARN");
+          this.view.addLog(
+            `Distance critique : ${this.model.distance} mm`,
+            "WARN"
+          );
           this.lastDistanceBlockLog = now;
         }
       }
 
-      // --- Logs serveur ---
+      // Logs serveur
       if (data.type === "log" && data.message) {
         this.view.addLog(`[Serveur] ${data.message}`, "INFO");
       }
-
     } catch (err) {
       console.error("Erreur parsing WebSocket :", err);
       this.view.addLog(`Erreur parsing WebSocket : ${err.message}`, "ERROR");
     }
   }
 
-  // Connexion Gamepad
+  // Gamepad connecté
   handleGamepadConnect(e) {
     if (!this.controllerActive) {
       this.view.addLog("Gamepad connecté", "INFO");
@@ -132,7 +146,7 @@ export default class RoverController {
     }
   }
 
-  // Déconnexion Gamepad
+  // Gamepad déconnecté
   handleGamepadDisconnect(e) {
     if (this.controllerActive) {
       this.view.addLog("Gamepad déconnecté", "WARN");
@@ -141,36 +155,34 @@ export default class RoverController {
     }
   }
 
-  // Met à jour les positions des joysticks dans l'UI
+  // Mise à jour des positions des joysticks
   updateJoystickPositions = (gp) => {
     if (!gp) return;
 
-    // Récupérer les axes
-    const lsX = gp.axes[0] || 0; // Stick gauche X (gauche/droite)
-    const lsY = gp.axes[1] || 0; // Stick gauche Y (avant/arrière)
-    const rsX = gp.axes[2] || 0; // Stick droit X (direction gauche/droite)
-    const rsY = gp.axes[3] || 0; // Stick droit Y (direction avant/arrière)
+    const lsY = gp.axes[1] || 0; // Stick gauche vertical
+    const rsX = gp.axes[2] || 0; // Stick droit horizontal
 
-    // Mettre à jour la position du stick gauche (Drive)
+    // Stick gauche (Drive)
     const driveKnob = document.getElementById("drive-knob-handle");
     if (driveKnob) {
-      const maxMove = 40; // Déplacement maximal en pixels
-      driveKnob.style.transform = `translate(${0}px, ${lsY * maxMove}px)`; // Avant/arrière
+      const maxMove = 40;
+      driveKnob.style.transform = `translate(${0}px, ${lsY * maxMove}px)`;
     }
 
-    // Mettre à jour la position du stick droit (Steering)
+    // Stick droit (Steering)
     const steerKnob = document.getElementById("steer-knob-handle");
     if (steerKnob) {
-      const maxMove = 40; // Déplacement maximal en pixels
-      steerKnob.style.transform = `translate(${rsX * maxMove}px, ${0}px)`; // Direction gauche/droite
+      const maxMove = 40;
+      steerKnob.style.transform = `translate(${rsX * maxMove}px, ${0}px)`;
     }
   };
 
-  // Boucle principale du Gamepad
+  // Boucle principale
   loop = () => {
     const gp = navigator.getGamepads()[0];
 
     if (!gp) {
+      // Pas de gamepad détecté
       if (this.controllerActive) {
         this.controllerActive = false;
         this.view.updateStatus("⏳ En attente du contrôleur...");
@@ -184,44 +196,40 @@ export default class RoverController {
       this.view.updateStatus("🎮 Contrôleur actif");
     }
 
-    // --- BOUTONS ---
+    // --- Boutons ---
     const btnA = gp.buttons[0]?.pressed;
     const btnX = gp.buttons[2]?.pressed;
     const btnY = gp.buttons[3]?.pressed;
 
-    // --- TRIGGERS ---
-    const rt = gp.buttons[7]?.value || 0;
-    const lt = gp.buttons[6]?.value || 0;
-
-    // --- MISE À JOUR DU MODÈLE ---
-    const prevStop = this.model.stopActive;
-    this.model.toggleStop(btnX);
-    if (prevStop !== this.model.stopActive) {
+    // Toggle STOP uniquement si changement d'état
+    if (btnX && !this.prevBtnX) {
+      this.model.stopActive = !this.model.stopActive;
       this.view.addLog(
         `Stop basculé : ${this.model.stopActive ? "ON" : "OFF"}`,
         "WARN"
       );
     }
+    this.prevBtnX = btnX;
 
-    const prevSpeed = this.model.speedMode;
-    this.model.updateSpeedLock();
-    this.model.handleSpeedButtons(btnA, btnY);
-    if (prevSpeed !== this.model.speedMode) {
-      this.view.addLog(
-        `Mode vitesse changé : ${prevSpeed} → ${this.model.speedMode}`,
-        "INFO"
-      );
-    }
+    // Boutons vitesse
+    if (btnA && !this.prevBtnA)
+      this.model.speedMode = Math.max(1, this.model.speedMode - 1);
+    if (btnY && !this.prevBtnY)
+      this.model.speedMode = Math.min(3, this.model.speedMode + 1);
+    this.prevBtnA = btnA;
+    this.prevBtnY = btnY;
 
-    // --- DIRECTION & AVANCE ---
+    // --- Direction & avance ---
     const steer = this.model.deadzone(gp.axes[2]);
     let forward = -this.model.deadzone(gp.axes[1]);
 
+    const rt = gp.buttons[7]?.value || 0;
+    const lt = gp.buttons[6]?.value || 0;
     if (rt > 0 && lt === 0) forward = rt;
     else if (lt > 0 && rt === 0) forward = -lt;
     else if (rt > 0 && lt > 0) forward = 0;
 
-    // --- BLOCAGE DISTANCE ---
+    // Blocage distance
     if (
       this.model.distance !== null &&
       this.model.distance < this.model.minDistanceBlock &&
@@ -235,11 +243,11 @@ export default class RoverController {
       }
     }
 
-    // --- CALCUL DES MOTEURS ---
+    // Calcul des moteurs
     const { left, right, factor } = this.model.computeMotors(forward, steer);
 
-    // --- ENVOI AU SERVEUR ---
-    if (this.ws.readyState === WebSocket.OPEN) {
+    // Envoi au serveur
+    if (this.ws?.readyState === WebSocket.OPEN) {
       this.ws.send(
         JSON.stringify({
           leftY: left,
@@ -250,18 +258,16 @@ export default class RoverController {
       );
     }
 
-    // --- MISE À JOUR DE L'UI ---
+    // Mise à jour de l'UI
     this.view.updateUI({
       speedMode: this.model.speedMode,
-      factor,
       speedLock: this.model.speedLock,
-      stop: this.model.stopActive,
+      stopActive: this.model.stopActive,
       distance: this.model.distance,
-      leftY: left,
-      rightY: right,
+      forward,
+      steer,
     });
 
-    // --- MISE À JOUR DES POSITIONS DES JOYSTICKS ---
     this.updateJoystickPositions(gp);
 
     requestAnimationFrame(this.loop);

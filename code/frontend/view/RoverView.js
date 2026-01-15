@@ -100,28 +100,28 @@ export default class RoverView {
         "width 0.3s ease, background-color 0.3s ease";
     }
 
-    // Bouton STOP
+    // STOP-Button in RoverView.updateUI
     if (this.stopButton) {
-      const icon = this.stopButton.querySelector(".material-icons");
+      // Icon bleibt unverändert, nur Text aktualisieren
+      let textEl = this.stopButton.querySelector(".stop-text");
+      if (!textEl) {
+        textEl = document.createElement("span");
+        textEl.classList.add("stop-text", "ml-2"); // Abstand zum Icon
+        this.stopButton.appendChild(textEl);
+      }
+      textEl.textContent = stopActive ? "ON" : "OFF";
 
-      // Mettre le texte après l'icône
-      this.stopButton.innerHTML = `
-    ${icon ? icon.outerHTML : ""}
-    STOP ${stopActive ? "ON" : "OFF"}
-  `;
-
-      // Optionnel : retour visuel de l'état
+      // Hintergrundfarbe
       this.stopButton.style.backgroundColor = stopActive
         ? "#7f1d1d"
         : "#dc2626";
-    }
 
-    // Affichage de la distance
-    if (this.distanceEl) {
-      this.distanceEl.innerHTML =
-        distance !== null && distance !== undefined
-          ? `${(distance / 10).toFixed(1)} cm`
-          : "--";
+      // Optional: pulsierende Animation aktivieren wenn STOP ON
+      if (stopActive) {
+        this.stopButton.classList.add("animate-pulse");
+      } else {
+        this.stopButton.classList.remove("animate-pulse");
+      }
     }
   }
 
