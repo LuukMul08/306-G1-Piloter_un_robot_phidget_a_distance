@@ -1,10 +1,10 @@
 import RoverModel from "../model/RoverModel.js";
 import RoverView from "../view/RoverView.js";
 
-const WS_URL = "ws://localhost:8080"; // ggf. IP anpassen
+const WS_URL = "ws://localhost:8080"; // Modifier si nécessaire l'adresse IP
 const CLIENT_ID_KEY = "rover-client-id";
 
-// Client-ID holen oder neu generieren
+// Récupère ou génère une ID unique pour le client
 function getClientId() {
   let id = localStorage.getItem(CLIENT_ID_KEY);
   if (!id) {
@@ -21,7 +21,7 @@ export default class RoverController {
   controllerActive = false;
 
   lastDistanceBlockLog = 0;
-  distanceLogCooldown = 1000; // 1 Sekunde zwischen Warnungen
+  distanceLogCooldown = 1000; // 1 seconde entre les alertes
 
   status = "NOT CONNECTED"; // NOT CONNECTED | CONNECTING | CONNECTED | DISCONNECTED
   clientId = getClientId();
@@ -30,37 +30,37 @@ export default class RoverController {
     this.connectWebSocket();
     this.loop();
 
-    // Gamepad-Events für Verbinden/Trennen
+    // Événements Gamepad pour connexion/déconnexion
     window.addEventListener("gamepadconnected", (e) => this.handleGamepadConnect(e));
     window.addEventListener("gamepaddisconnected", (e) => this.handleGamepadDisconnect(e));
   }
 
-  // WebSocket-Verbindung herstellen
+  // Établir la connexion WebSocket
   connectWebSocket() {
     this.status = "CONNECTING";
     this.view.updateStatus("CONNECTING…", false);
-    this.view.addLog("Trying to connect WebSocket…", "INFO");
+    this.view.addLog("Tentative de connexion WebSocket…", "INFO");
 
     this.ws = new WebSocket(WS_URL);
 
     this.ws.onopen = () => {
-      this.view.addLog("WebSocket connected", "INFO");
-      // HELLO an Server senden
+      this.view.addLog("WebSocket connecté", "INFO");
+      // Envoyer le message HELLO au serveur
       this.ws.send(JSON.stringify({ type: "hello", clientId: this.clientId }));
     };
 
     this.ws.onclose = () => {
       if (this.status !== "DISCONNECTED") {
         this.status = "DISCONNECTED";
-        this.view.addLog("WebSocket disconnected", "WARN");
+        this.view.addLog("WebSocket déconnecté", "WARN");
         this.view.updateStatus("DISCONNECTED", false);
       }
       this.ws = null;
     };
 
     this.ws.onerror = (event) => {
-      console.error("WebSocket error:", event);
-      this.view.addLog("WebSocket error (siehe Konsole)", "ERROR");
+      console.error("Erreur WebSocket :", event);
+      this.view.addLog("Erreur WebSocket (voir console)", "ERROR");
       this.ws = null;
       this.status = "DISCONNECTED";
       this.view.updateStatus("DISCONNECTED", false);
@@ -69,35 +69,35 @@ export default class RoverController {
     this.ws.onmessage = (e) => this.handleWsMessage(e);
   }
 
-  // WebSocket-Nachrichten verarbeiten
+  // Traiter les messages reçus via WebSocket
   handleWsMessage(e) {
     try {
       const data = JSON.parse(e.data);
 
-      // --- Handshake / Rover verbunden ---
+      // --- Handshake / Rover connecté ---
       if (data.type === "rover_connected") {
         this.status = "CONNECTED";
         this.view.addLog(
-          data.reconnect ? "Reconnected to rover" : "Connected to rover",
+          data.reconnect ? "Reconnecté au rover" : "Connecté au rover",
           "INFO"
         );
         this.view.updateStatus("CONNECTED", true);
       }
 
-      // --- Phidget Status ---
+      // --- Statut Phidget ---
       if (data.type === "phidget_status") {
         if (data.status === "connected") {
           this.status = "CONNECTED";
-          this.view.addLog("Phidget ready", "INFO");
+          this.view.addLog("Phidget prêt", "INFO");
           this.view.updateStatus("CONNECTED", true);
         } else if (data.status === "error") {
           this.status = "DISCONNECTED";
-          this.view.addLog(`Phidget error: ${data.message}`, "ERROR");
+          this.view.addLog(`Erreur Phidget : ${data.message}`, "ERROR");
           this.view.updateStatus("DISCONNECTED", false);
         }
       }
 
-      // --- Distance Sensor ---
+      // --- Capteur de distance ---
       if (data.distance != null) {
         const prev = this.model.distance;
         this.model.updateDistance(parseFloat(data.distance));
@@ -107,73 +107,73 @@ export default class RoverController {
           prev === null ||
           (this.model.distance < 300 && now - this.lastDistanceBlockLog > this.distanceLogCooldown)
         ) {
-          this.view.addLog(`Distance critical: ${this.model.distance} mm`, "WARN");
+          this.view.addLog(`Distance critique : ${this.model.distance} mm`, "WARN");
           this.lastDistanceBlockLog = now;
         }
       }
 
-      // --- Server Logs ---
+      // --- Logs serveur ---
       if (data.type === "log" && data.message) {
-        this.view.addLog(`[Server] ${data.message}`, "INFO");
+        this.view.addLog(`[Serveur] ${data.message}`, "INFO");
       }
 
     } catch (err) {
-      console.error("WebSocket parse error:", err);
-      this.view.addLog(`WebSocket parse error: ${err.message}`, "ERROR");
+      console.error("Erreur parsing WebSocket :", err);
+      this.view.addLog(`Erreur parsing WebSocket : ${err.message}`, "ERROR");
     }
   }
 
-  // Gamepad verbinden
+  // Connexion Gamepad
   handleGamepadConnect(e) {
     if (!this.controllerActive) {
-      this.view.addLog("Gamepad connected", "INFO");
+      this.view.addLog("Gamepad connecté", "INFO");
       this.controllerActive = true;
       this.loop();
     }
   }
 
-  // Gamepad trennen
+  // Déconnexion Gamepad
   handleGamepadDisconnect(e) {
     if (this.controllerActive) {
-      this.view.addLog("Gamepad disconnected", "WARN");
+      this.view.addLog("Gamepad déconnecté", "WARN");
       this.controllerActive = false;
-      this.view.updateStatus("⏳ Waiting for controller...");
+      this.view.updateStatus("⏳ En attente du contrôleur...");
     }
   }
 
-  // Joystick-Positionen auf der Seite aktualisieren
+  // Met à jour les positions des joysticks dans l'UI
   updateJoystickPositions = (gp) => {
     if (!gp) return;
 
-    // Axis-Werte auslesen
-    const lsX = gp.axes[0] || 0; // Linker Stick X-Achse (Links / Rechts)
-    const lsY = gp.axes[1] || 0; // Linker Stick Y-Achse (Vorwärts / Rückwärts)
-    const rsX = gp.axes[2] || 0; // Rechter Stick X-Achse (Lenken Links / Rechts)
-    const rsY = gp.axes[3] || 0; // Rechter Stick Y-Achse (Lenken Vorwärts / Rückwärts)
+    // Récupérer les axes
+    const lsX = gp.axes[0] || 0; // Stick gauche X (gauche/droite)
+    const lsY = gp.axes[1] || 0; // Stick gauche Y (avant/arrière)
+    const rsX = gp.axes[2] || 0; // Stick droit X (direction gauche/droite)
+    const rsY = gp.axes[3] || 0; // Stick droit Y (direction avant/arrière)
 
-    // Update der Position des linken Sticks (Drive)
+    // Mettre à jour la position du stick gauche (Drive)
     const driveKnob = document.getElementById("drive-knob-handle");
     if (driveKnob) {
-      const maxMove = 40; // Maximale Bewegung in Pixeln
-      driveKnob.style.transform = `translate(${0}px, ${lsY * maxMove}px)`; // Vorwärts / Rückwärts
+      const maxMove = 40; // Déplacement maximal en pixels
+      driveKnob.style.transform = `translate(${0}px, ${lsY * maxMove}px)`; // Avant/arrière
     }
 
-    // Update der Position des rechten Sticks (Steering)
+    // Mettre à jour la position du stick droit (Steering)
     const steerKnob = document.getElementById("steer-knob-handle");
     if (steerKnob) {
-      const maxMove = 40; // Maximale Bewegung in Pixeln
-      steerKnob.style.transform = `translate(${rsX * maxMove}px, ${0}px)`; // Links / Rechts lenken
+      const maxMove = 40; // Déplacement maximal en pixels
+      steerKnob.style.transform = `translate(${rsX * maxMove}px, ${0}px)`; // Direction gauche/droite
     }
   };
 
-  // Gamepad Steuerung
+  // Boucle principale du Gamepad
   loop = () => {
     const gp = navigator.getGamepads()[0];
 
     if (!gp) {
       if (this.controllerActive) {
         this.controllerActive = false;
-        this.view.updateStatus("⏳ Waiting for controller...");
+        this.view.updateStatus("⏳ En attente du contrôleur...");
       }
       requestAnimationFrame(this.loop);
       return;
@@ -181,10 +181,10 @@ export default class RoverController {
 
     if (!this.controllerActive) {
       this.controllerActive = true;
-      this.view.updateStatus("🎮 Controller active");
+      this.view.updateStatus("🎮 Contrôleur actif");
     }
 
-    // --- BUTTONS ---
+    // --- BOUTONS ---
     const btnA = gp.buttons[0]?.pressed;
     const btnX = gp.buttons[2]?.pressed;
     const btnY = gp.buttons[3]?.pressed;
@@ -193,12 +193,12 @@ export default class RoverController {
     const rt = gp.buttons[7]?.value || 0;
     const lt = gp.buttons[6]?.value || 0;
 
-    // --- MODEL STATE UPDATES ---
+    // --- MISE À JOUR DU MODÈLE ---
     const prevStop = this.model.stopActive;
     this.model.toggleStop(btnX);
     if (prevStop !== this.model.stopActive) {
       this.view.addLog(
-        `Stop toggled: ${this.model.stopActive ? "ON" : "OFF"}`,
+        `Stop basculé : ${this.model.stopActive ? "ON" : "OFF"}`,
         "WARN"
       );
     }
@@ -208,12 +208,12 @@ export default class RoverController {
     this.model.handleSpeedButtons(btnA, btnY);
     if (prevSpeed !== this.model.speedMode) {
       this.view.addLog(
-        `Speed mode changed: ${prevSpeed} → ${this.model.speedMode}`,
+        `Mode vitesse changé : ${prevSpeed} → ${this.model.speedMode}`,
         "INFO"
       );
     }
 
-    // --- STEERING & FORWARD ---
+    // --- DIRECTION & AVANCE ---
     const steer = this.model.deadzone(gp.axes[2]);
     let forward = -this.model.deadzone(gp.axes[1]);
 
@@ -221,7 +221,7 @@ export default class RoverController {
     else if (lt > 0 && rt === 0) forward = -lt;
     else if (rt > 0 && lt > 0) forward = 0;
 
-    // --- DISTANCE BLOCK ---
+    // --- BLOCAGE DISTANCE ---
     if (
       this.model.distance !== null &&
       this.model.distance < this.model.minDistanceBlock &&
@@ -230,15 +230,15 @@ export default class RoverController {
       forward = 0;
       const now = Date.now();
       if (now - this.lastDistanceBlockLog > this.distanceLogCooldown) {
-        this.view.addLog("Distance block active, forward stopped", "WARN");
+        this.view.addLog("Blocage distance actif, avance stoppé", "WARN");
         this.lastDistanceBlockLog = now;
       }
     }
 
-    // --- MOTOR COMPUTATION ---
+    // --- CALCUL DES MOTEURS ---
     const { left, right, factor } = this.model.computeMotors(forward, steer);
 
-    // --- SEND TO SERVER ---
+    // --- ENVOI AU SERVEUR ---
     if (this.ws.readyState === WebSocket.OPEN) {
       this.ws.send(
         JSON.stringify({
@@ -250,7 +250,7 @@ export default class RoverController {
       );
     }
 
-    // --- UPDATE VIEW ---
+    // --- MISE À JOUR DE L'UI ---
     this.view.updateUI({
       speedMode: this.model.speedMode,
       factor,
@@ -261,7 +261,7 @@ export default class RoverController {
       rightY: right,
     });
 
-    // --- UPDATE JOYSTICK POSITION ---
+    // --- MISE À JOUR DES POSITIONS DES JOYSTICKS ---
     this.updateJoystickPositions(gp);
 
     requestAnimationFrame(this.loop);

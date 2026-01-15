@@ -1,5 +1,5 @@
 document.addEventListener("DOMContentLoaded", () => {
-    // --- UI Elements ---
+    // --- Éléments de l'interface utilisateur (UI) ---
     const backendStatusText = document.getElementById("backend-connection-status");
     const backendDot = document.getElementById("backend-dot");
     const connectBackendBtn = document.getElementById("connect-backend-btn");
@@ -13,9 +13,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
     let ws = null;
     let backendReady = false;
-    let phidgetReady = false; // Track whether the Phidget connection is successful
+    let phidgetReady = false; // Suivi de l'état de la connexion au Phidget
 
-    // --- Client ID Management ---
+    // --- Gestion de l'ID client ---
     const CLIENT_ID_KEY = "rover-client-id";
     function getClientId() {
         let id = localStorage.getItem(CLIENT_ID_KEY);
@@ -27,40 +27,40 @@ document.addEventListener("DOMContentLoaded", () => {
     }
     const clientId = getClientId();
 
-    // --- UI State Updates ---
+    // --- Mise à jour de l'état de l'UI ---
     function updateBackendUI(state) {
-        // state can be: 'disconnected', 'connecting', 'connected'
+        // state peut être : 'disconnected', 'connecting', 'connected'
 
         if (state === 'connecting') {
-            backendStatusText.textContent = "Connecting...";
+            backendStatusText.textContent = "Connexion en cours...";
             backendDot.className = "h-2 w-2 rounded-full bg-accent-yellow animate-pulse";
             connectBackendBtn.disabled = true;
         }
         else if (state === 'connected') {
             backendReady = true;
-            backendStatusText.textContent = "Backend Server Connected";
-            backendDot.className = "h-2 w-2 rounded-full bg-primary"; // Switch to Green
+            backendStatusText.textContent = "Serveur Backend Connecté";
+            backendDot.className = "h-2 w-2 rounded-full bg-primary"; // Passe au vert
             connectBackendBtn.disabled = true;
             connectBackendBtn.classList.add("opacity-50", "cursor-not-allowed");
 
-            // Unlock Phidget Hardware Card
+            // Déverrouille la carte matérielle Phidget
             phidgetCard.classList.remove("opacity-50", "pointer-events-none", "grayscale-[0.5]");
             phidgetLockMsg.classList.add("hidden");
         }
         else {
             backendReady = false;
-            backendStatusText.textContent = "Backend Server Disconnected";
-            backendDot.className = "h-2 w-2 rounded-full bg-accent-red"; // Switch to Red
+            backendStatusText.textContent = "Serveur Backend Déconnecté";
+            backendDot.className = "h-2 w-2 rounded-full bg-accent-red"; // Passe au rouge
             connectBackendBtn.disabled = false;
             connectBackendBtn.classList.remove("opacity-50", "cursor-not-allowed");
 
-            // Lock Phidget Hardware Card
+            // Verrouille la carte matérielle Phidget
             phidgetCard.classList.add("opacity-50", "pointer-events-none", "grayscale-[0.5]");
             phidgetLockMsg.classList.remove("hidden");
         }
     }
 
-    // --- WebSocket Logic ---
+    // --- Logique WebSocket ---
     connectBackendBtn.addEventListener("click", () => {
         const url = wsUrlInput.value.trim() || "ws://localhost:8080";
 
@@ -69,39 +69,40 @@ document.addEventListener("DOMContentLoaded", () => {
         ws = new WebSocket(url);
 
         ws.onopen = () => {
-            console.log("WS Open: Sending Hello");
+            console.log("WS ouvert : Envoi de Hello");
             ws.send(JSON.stringify({ type: "hello", clientId }));
         };
 
         ws.onmessage = (event) => {
             try {
                 const msg = JSON.parse(event.data);
-                console.log("Message received:", msg);
+                console.log("Message reçu :", msg);
 
-                // Logic to confirm the backend is ready
+                // Vérifie si le backend est prêt
                 if (msg.type === "rover_connected") {
                     updateBackendUI('connected');
                 }
 
+                // Vérifie l'état de la connexion au Phidget
                 if (msg.type === "phidget_status") {
                     if (msg.status === "connected") {
-                        phidgetStatusText.textContent = "Phidget Network Server Connected";
+                        phidgetStatusText.textContent = "Serveur Réseau Phidget Connecté";
                         phidgetDot.className = "h-2 w-2 rounded-full bg-primary";
                         phidgetReady = true;
 
-                        // Auto-redirect to main dashboard once both connections are successful
+                        // Redirection automatique vers le tableau de bord principal
                         if (backendReady && phidgetReady) {
                             setTimeout(() => {
-                                window.location.href = "./html/switchDevice.html";  // Redirect to the main dashboard
-                            }, 1); // Delay 1 second before redirect
+                                window.location.href = "./html/switchDevice.html";  // Redirection vers le tableau de bord
+                            }, 1); // Délai d'une milliseconde avant redirection
                         }
                     } else {
-                        phidgetStatusText.textContent = "Phidget Network Server Disconnected";
+                        phidgetStatusText.textContent = "Serveur Réseau Phidget Déconnecté";
                         phidgetDot.className = "h-2 w-2 rounded-full bg-accent-red";
                     }
                 }
             } catch (err) {
-                console.error("Error parsing message:", err);
+                console.error("Erreur lors du parsing du message :", err);
             }
         };
 
@@ -110,12 +111,12 @@ document.addEventListener("DOMContentLoaded", () => {
         };
 
         ws.onerror = (err) => {
-            console.error("WS Error:", err);
+            console.error("Erreur WS :", err);
             updateBackendUI('disconnected');
         };
     });
 
-    // --- Phidget Hardware Connection ---
+    // --- Connexion matérielle Phidget ---
     phidgetForm.addEventListener("submit", (e) => {
         e.preventDefault();
         if (!backendReady || !ws) return;

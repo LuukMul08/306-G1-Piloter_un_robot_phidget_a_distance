@@ -24,23 +24,23 @@ export default class RoverView {
     );
     this.logEntries = [];
 
-    // NEU: speichert aktuellen Status, um Doppel-Logs zu vermeiden
+    // NOUVEAU : stocke le statut actuel pour éviter les doublons dans les logs
     this.currentStatus = null;
   }
 
   /**
-   * Status aktualisieren. connected=false → rot + Log "NOT CONNECTED" nur einmal
+   * Met à jour le statut. connected=false → rouge + log "NOT CONNECTED" une seule fois
    */
   updateStatus(text, connected = true) {
     if (this.status) {
       this.status.textContent = text;
-      this.status.style.color = connected ? "#16a34a" : "#ef4444"; // Grün/Rot
+      this.status.style.color = connected ? "#16a34a" : "#ef4444"; // Vert/Rouge
     }
 
-    // NEU: Log nur, wenn sich Status ändert
+    // NOUVEAU : log uniquement si le statut change
     if (this.currentStatus !== text) {
       if (!connected) {
-        this.addLog("Rover NOT CONNECTED", "ERROR");
+        this.addLog("Rover NON CONNECTÉ", "ERROR");
       } else {
         this.addLog(text, "INFO");
       }
@@ -48,6 +48,9 @@ export default class RoverView {
     }
   }
 
+  /**
+   * Met à jour l'affichage de l'UI (mode vitesse, barre, distance, STOP, etc.)
+   */
   updateUI({
     speedMode,
     factor,
@@ -57,10 +60,10 @@ export default class RoverView {
     steer,
     distance,
   }) {
-    // Speed Mode Text & Bar
+    // Texte du mode vitesse & barre de progression
     if (this.speedModeEl && this.speedBarEl) {
       const modes = ["Low", "Normal", "High"];
-      const modeText = modes[speedMode - 1] || "Unknown";
+      const modeText = modes[speedMode - 1] || "Inconnu";
 
       let width = 0;
       let color = "";
@@ -69,17 +72,17 @@ export default class RoverView {
       switch (speedMode) {
         case 1:
           width = 33;
-          color = "#22c55e"; // grün
+          color = "#22c55e"; // vert
           textColor = "#16a34a";
           break;
         case 2:
           width = 66;
-          color = "#facc15"; // gelb
+          color = "#facc15"; // jaune
           textColor = "#ca8a04";
           break;
         case 3:
           width = 100;
-          color = "#ef4444"; // rot
+          color = "#ef4444"; // rouge
           textColor = "#b91c1c";
           break;
         default:
@@ -97,23 +100,23 @@ export default class RoverView {
         "width 0.3s ease, background-color 0.3s ease";
     }
 
-    // STOP Button
+    // Bouton STOP
     if (this.stopButton) {
       const icon = this.stopButton.querySelector(".material-icons");
 
-      // Text-Node nach dem Icon setzen
+      // Mettre le texte après l'icône
       this.stopButton.innerHTML = `
     ${icon ? icon.outerHTML : ""}
     STOP ${stopActive ? "ON" : "OFF"}
   `;
 
-      // Optional: visuelles Feedback
+      // Optionnel : retour visuel de l'état
       this.stopButton.style.backgroundColor = stopActive
         ? "#7f1d1d"
         : "#dc2626";
     }
 
-    // Distance Anzeige
+    // Affichage de la distance
     if (this.distanceEl) {
       this.distanceEl.innerHTML =
         distance !== null && distance !== undefined
@@ -122,6 +125,9 @@ export default class RoverView {
     }
   }
 
+  /**
+   * Ajoute un message au journal d'événements avec un type (INFO, WARN, ERROR)
+   */
   addLog(message, type = "INFO") {
     if (!this.logs) return;
 
@@ -149,10 +155,12 @@ export default class RoverView {
 
     this.logEntries.push(p);
 
+    // Supprime les anciens logs si dépassement de maxLogs
     if (this.logEntries.length > this.maxLogs) {
       this.logEntries.shift();
     }
 
+    // Actualise l'affichage du journal
     this.logs.innerHTML = "";
     this.logEntries.forEach((entry) => this.logs.appendChild(entry));
     this.logs.scrollTop = this.logs.scrollHeight;

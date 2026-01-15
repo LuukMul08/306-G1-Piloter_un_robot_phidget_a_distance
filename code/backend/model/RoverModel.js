@@ -9,16 +9,16 @@ export default class RoverModel {
   motorRight;
   distanceSensor;
   distanceAvailable = false;
-  lastDistance = 100; // Distance initiale très éloignée (cm)
+  lastDistance = 100; // Distance initiale très grande pour sécurité (cm)
 
   constructor() {}
 
   /**
    * Initialise les moteurs gauche et droit.
-   * @param {number} serialLeft - Numéro de série moteur gauche
-   * @param {number} serialRight - Numéro de série moteur droit
-   * @param {number} channelLeft - Canal moteur gauche (par défaut 0)
-   * @param {number} channelRight - Canal moteur droit (par défaut 1)
+   * @param {number} serialLeft - Numéro de série du moteur gauche
+   * @param {number} serialRight - Numéro de série du moteur droit
+   * @param {number} channelLeft - Canal du moteur gauche (par défaut 0)
+   * @param {number} channelRight - Canal du moteur droit (par défaut 1)
    */
   async initMotors(serialLeft, serialRight, channelLeft = 0, channelRight = 1) {
     this.motorLeft = new phidget22.DCMotor();
@@ -31,6 +31,7 @@ export default class RoverModel {
     this.motorRight.setDeviceSerialNumber(serialRight);
     this.motorRight.setChannel(channelRight);
 
+    // --- Ouverture des moteurs avec timeout ---
     await this.motorLeft.open(10000);
     await this.motorRight.open(10000);
   }
@@ -47,45 +48,45 @@ export default class RoverModel {
       this.distanceSensor.setDeviceSerialNumber(serial);
       this.distanceSensor.setChannel(channel);
 
-      // --- Mise à jour de la distance à chaque changement ---
+      // --- Met à jour la distance à chaque changement ---
       this.distanceSensor.onDistanceChange = (distance) => {
-        this.lastDistance = distance; // cm
+        this.lastDistance = distance; // Distance en cm
       };
 
       await this.distanceSensor.open(5000);
       this.distanceAvailable = true;
     } catch {
       this.distanceAvailable = false;
-      console.warn('⚠️ Capteur de distance optionnel : capteur non trouvé');
+      console.warn('⚠️ Capteur de distance optionnel : capteur non détecté');
     }
   }
 
   /**
    * Définit les vitesses des moteurs.
-   * Applique une deadzone et limite la vitesse entre -1 et 1.
+   * Applique une zone morte (deadzone) et limite la vitesse entre -1 et 1.
    * @param {number} left - Vitesse moteur gauche
    * @param {number} right - Vitesse moteur droit
    */
   setMotorSpeeds(left, right) {
-  if (!this.motorLeft || !this.motorRight) {
-    console.warn("⚠️ Motoren noch nicht initialisiert – Befehl ignoriert");
-    return;
+    if (!this.motorLeft || !this.motorRight) {
+      console.warn("⚠️ Moteurs non initialisés – commande ignorée");
+      return;
+    }
+
+    const clamp = (v, min, max) => Math.max(min, Math.min(max, v));
+    const deadzone = 0.15; // Ignorer les petites valeurs pour éviter les mouvements involontaires
+    const maxSpeed = 1;
+
+    const speedLeft = Math.abs(left) > deadzone ? clamp(left * maxSpeed, -1, 1) : 0;
+    const speedRight = Math.abs(right) > deadzone ? clamp(right * maxSpeed, -1, 1) : 0;
+
+    this.motorLeft.setTargetVelocity(speedLeft);
+    this.motorRight.setTargetVelocity(speedRight);
   }
-
-  const clamp = (v, min, max) => Math.max(min, Math.min(max, v));
-  const deadzone = 0.15;
-  const maxSpeed = 1;
-
-  const speedLeft = Math.abs(left) > deadzone ? clamp(left * maxSpeed, -1, 1) : 0;
-  const speedRight = Math.abs(right) > deadzone ? clamp(right * maxSpeed, -1, 1) : 0;
-
-  this.motorLeft.setTargetVelocity(speedLeft);
-  this.motorRight.setTargetVelocity(speedRight);
-}
 
   /**
    * Ferme les moteurs et le capteur de distance.
-   * Utilisé lors de l'arrêt du serveur.
+   * À utiliser lors de l'arrêt du serveur pour libérer les ressources.
    */
   async shutdown() {
     try { await this.motorLeft.close(); } catch {}

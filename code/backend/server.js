@@ -10,33 +10,33 @@ import RoverController from "./controller/RoverController.js";
 const PORT = 8080;
 const clients = new Map();
 
-// --- Globale Phidget-Verbindung und Daten ---
-let savedPhidgetConn = null; // die echte NetworkConnection
+// --- Connexion et données Phidget globales ---
+let savedPhidgetConn = null; // la vraie NetworkConnection
 let savedPhidgetData = null; // { ip, port }
-const connectionDataFile = "./phidgetConnection.json"; // Relativer Pfad zur gespeicherten Phidget-Verbindung
+const connectionDataFile = "./phidgetConnection.json"; // chemin relatif vers la connexion Phidget sauvegardée
 
 async function loadSavedPhidgetData() {
   try {
     if (fs.existsSync(connectionDataFile)) {
       const data = fs.readFileSync(connectionDataFile, "utf8");
 
-      // Überprüfen, ob die Datei leer ist
+      // Vérifier si le fichier est vide
       if (data.trim() === "") {
-        console.log("ℹ️ Die gespeicherte Phidget-Verbindungsdatei ist leer.");
+        console.log("ℹ️ Le fichier de connexion Phidget sauvegardé est vide.");
         return;
       }
 
-      // Versuchen, die Daten zu parsen
+      // Essayer de parser les données
       savedPhidgetData = JSON.parse(data);
-      console.log(`ℹ️ Geladene gespeicherte Phidget-Verbindungsdaten: ${JSON.stringify(savedPhidgetData)}`);
+      console.log(`ℹ️ Données de connexion Phidget sauvegardées chargées : ${JSON.stringify(savedPhidgetData)}`);
     } else {
-      console.log("ℹ️ Keine gespeicherten Verbindungsdaten gefunden.");
+      console.log("ℹ️ Aucune donnée de connexion sauvegardée trouvée.");
     }
   } catch (err) {
     if (err instanceof SyntaxError) {
-      console.error("❌ Fehler beim Laden der gespeicherten Phidget-Daten: Ungültiges JSON-Format in der Datei.");
+      console.error("❌ Erreur lors du chargement des données Phidget sauvegardées : format JSON invalide dans le fichier.");
     } else {
-      console.error("❌ Fehler beim Laden der gespeicherten Phidget-Daten:", err);
+      console.error("❌ Erreur lors du chargement des données Phidget sauvegardées :", err);
     }
   }
 }
@@ -44,50 +44,50 @@ async function loadSavedPhidgetData() {
 async function savePhidgetData(ip, port) {
   const data = { ip, port };
   try {
-    // Überprüfen, ob das Verzeichnis existiert, bevor die Datei gespeichert wird
+    // Vérifier si le répertoire existe avant d'enregistrer le fichier
     const dir = path.dirname(connectionDataFile);
     if (!fs.existsSync(dir)) {
-      fs.mkdirSync(dir, { recursive: true }); // Verzeichnis erstellen, falls nicht vorhanden
+      fs.mkdirSync(dir, { recursive: true }); // créer le répertoire si nécessaire
     }
 
     fs.writeFileSync(connectionDataFile, JSON.stringify(data), "utf8");
-    console.log(`✅ Gespeicherte Phidget-Verbindungsdaten: ${JSON.stringify(data)}`);
+    console.log(`✅ Données de connexion Phidget sauvegardées : ${JSON.stringify(data)}`);
   } catch (err) {
-    console.error("❌ Fehler beim Speichern der Phidget-Daten:", err);
+    console.error("❌ Erreur lors de la sauvegarde des données Phidget :", err);
   }
 }
 
 async function connectPhidget(model, ip, port) {
   try {
-    // Wenn schon verbunden, nur wiederverwenden
+    // Si déjà connecté, réutiliser la connexion existante
     if (savedPhidgetConn) {
-      console.log("⚠️ Phidget bereits verbunden, wiederverwenden");
+      console.log("⚠️ Phidget déjà connecté, réutilisation de la connexion");
       return savedPhidgetConn;
     }
 
     const conn = new phidget22.NetworkConnection(port, ip);
-    console.log(`⏳ Verbindungsaufbau zu Phidget Hub ${ip}:${port}...`);
-    await conn.connect(20000); // Timeout auf 20 Sekunden erhöhen
-    console.log(`✅ Verbunden mit Phidget Hub ${ip}:${port}`);
+    console.log(`⏳ Connexion au Phidget Hub ${ip}:${port}...`);
+    await conn.connect(20000); // augmenter le timeout à 20 secondes
+    console.log(`✅ Connecté au Phidget Hub ${ip}:${port}`);
 
-    // Motoren & Sensoren nur einmal initialisieren
+    // Initialiser moteurs et capteurs une seule fois
     await model.initMotors(667784, 667784, 0, 1);
     await model.initDistanceSensor(667784, 0);
-    console.log("✅ Motoren und Distance Sensor initialisiert");
+    console.log("✅ Moteurs et capteur de distance initialisés");
 
     savedPhidgetConn = conn;
     savedPhidgetData = { ip, port };
 
-    // Wenn die Verbindung abbricht, automatisch zurücksetzen
+    // Réinitialiser automatiquement si la connexion est perdue
     conn.onDisconnect = () => {
-      console.warn("⚠️ Phidget-Verbindung getrennt");
+      console.warn("⚠️ Connexion Phidget déconnectée");
       savedPhidgetConn = null;
       savedPhidgetData = null;
     };
 
     return conn;
   } catch (err) {
-    console.error("❌ Phidget-Verbindung fehlgeschlagen:", err);
+    console.error("❌ Échec de la connexion au Phidget :", err);
     savedPhidgetConn = null;
     return null;
   }
@@ -97,9 +97,9 @@ async function shutdownPhidget() {
   if (savedPhidgetConn) {
     try {
       await savedPhidgetConn.close();
-      console.log("✅ Phidget-Verbindung sauber geschlossen");
+      console.log("✅ Connexion Phidget fermée proprement");
     } catch (err) {
-      console.error("❌ Fehler beim Schließen der Phidget-Verbindung:", err);
+      console.error("❌ Erreur lors de la fermeture de la connexion Phidget :", err);
     }
     savedPhidgetConn = null;
     savedPhidgetData = null;
@@ -107,7 +107,7 @@ async function shutdownPhidget() {
 }
 
 async function main() {
-  // Prüfe, ob der Port verfügbar ist, um EADDRINUSE frühzeitig zu erkennen
+  // Vérifier si le port est libre pour éviter EADDRINUSE
   async function isPortFree(port, host = "0.0.0.0") {
     return new Promise((resolve) => {
       const tester = net.createServer()
@@ -124,15 +124,15 @@ async function main() {
 
   const portFree = await isPortFree(PORT, "0.0.0.0");
   if (!portFree) {
-    console.error(`❌ Port ${PORT} bereits in Benutzung. Bitte beende den anderen Prozess oder wähle einen anderen Port.`);
+    console.error(`❌ Port ${PORT} déjà utilisé. Veuillez fermer l'autre processus ou choisir un autre port.`);
     process.exit(1);
   }
 
   const wss = new WebSocketServer({ port: PORT, host: "0.0.0.0" });
   wss.on("error", async (err) => {
-    console.error("❌ WebSocket Server error:", err);
+    console.error("❌ Erreur du serveur WebSocket :", err);
     if (err && err.code === "EADDRINUSE") {
-      console.error(`❌ Port ${PORT} bereits in Benutzung (EADDRINUSE)`);
+      console.error(`❌ Port ${PORT} déjà utilisé (EADDRINUSE)`);
       try {
         await shutdownPhidget();
       } catch (e) {}
@@ -140,41 +140,41 @@ async function main() {
     }
   });
 
-  console.log(`✅ WebSocket Server läuft auf ws://localhost:${PORT}`);
+  console.log(`✅ Serveur WebSocket actif sur ws://localhost:${PORT}`);
 
   const model = new RoverModel();
   const view = new RoverView();
 
-  // --- Sauberer Shutdown ---
+  // --- Arrêt propre ---
   async function shutdown() {
-    console.log("🛑 Shutdown...");
+    console.log("🛑 Arrêt en cours...");
     await shutdownPhidget();
     await model.shutdown();
-    console.log("✅ Shutdown abgeschlossen");
+    console.log("✅ Arrêt terminé");
     process.exit();
   }
 
   process.on("SIGINT", shutdown);
   process.on("SIGTERM", shutdown);
   process.on("uncaughtException", async (err) => {
-    console.error("❌ Uncaught Exception:", err);
+    console.error("❌ Exception non capturée :", err);
     await shutdown();
   });
 
-  // Lade gespeicherte Phidget-Verbindungsdaten beim Start
+  // Charger les données de connexion Phidget sauvegardées au démarrage
   await loadSavedPhidgetData();
 
   wss.on("connection", async (ws, req) => {
     const ip = req.socket.remoteAddress;
-    console.log(`🔗 WS connected from ${ip}`);
+    console.log(`🔗 WS connecté depuis ${ip}`);
 
     ws.on("message", async (msg) => {
       let data;
       try {
         data = JSON.parse(msg);
       } catch (err) {
-        console.error("❌ Invalid JSON:", err);
-        ws.send(JSON.stringify({ type: "error", message: "Invalid JSON" }));
+        console.error("❌ JSON invalide :", err);
+        ws.send(JSON.stringify({ type: "error", message: "JSON invalide" }));
         return;
       }
 
@@ -185,13 +185,13 @@ async function main() {
         const isReconnect = !!existing;
 
         if (isReconnect) {
-          console.log(`🔄 Reconnect von ${clientId}`);
+          console.log(`🔄 Reconnexion de ${clientId}`);
           existing.ws.onclose = null;
           existing.ws.close();
           existing.controller?.shutdown?.();
           clients.delete(clientId);
         } else {
-          console.log(`🆕 Neuer Client ${clientId}`);
+          console.log(`🆕 Nouveau client ${clientId}`);
         }
 
         const controller = new RoverController(model, view, ws);
@@ -199,9 +199,9 @@ async function main() {
 
         ws.send(JSON.stringify({ type: "rover_connected", reconnect: isReconnect }));
 
-        // --- Wenn Phidget schon verbunden, Status zurückgeben ---
+        // --- Si Phidget déjà connecté, renvoyer le statut ---
         if (savedPhidgetConn) {
-          console.log(`ℹ️ Bestehende Phidget-Verbindung erkannt, Status an Client senden`);
+          console.log(`ℹ️ Connexion Phidget existante détectée, envoi du statut au client`);
           clients.get(clientId).phidgetConn = savedPhidgetConn;
           ws.send(JSON.stringify({ type: "phidget_status", status: "connected" }));
         }
@@ -213,34 +213,34 @@ async function main() {
         const ip = data.ip || "10.18.1.126";
         const port = data.port || 5661;
 
-        console.log(`🔌 Client ${clientId} versucht, sich mit Phidget Hub ${ip}:${port} zu verbinden`);
-        ws.send(JSON.stringify({ type: "log", message: `Client ${clientId} verbindet sich mit Phidget Hub ${ip}:${port}` }));
+        console.log(`🔌 Le client ${clientId} tente de se connecter au Phidget Hub ${ip}:${port}`);
+        ws.send(JSON.stringify({ type: "log", message: `Client ${clientId} se connecte au Phidget Hub ${ip}:${port}` }));
 
         const existing = clients.get(clientId);
 
         try {
-          // Immer neu verbinden, falls keine gültige Verbindung existiert
+          // Toujours se reconnecter si aucune connexion valide
           const conn = await connectPhidget(model, ip, port);
           if (conn) {
             existing.phidgetConn = conn;
             ws.send(JSON.stringify({ type: "phidget_status", status: "connected" }));
-            // Speichere die Verbindung für zukünftige Verbindungen
+            // Sauvegarder la connexion pour les futures connexions
             await savePhidgetData(ip, port);
           } else {
-            ws.send(JSON.stringify({ type: "phidget_status", status: "error", message: "Verbindung fehlgeschlagen" }));
+            ws.send(JSON.stringify({ type: "phidget_status", status: "error", message: "Échec de la connexion" }));
           }
         } catch (err) {
-          console.error("❌ Phidget-Verbindung fehlgeschlagen:", err);
+          console.error("❌ Échec de la connexion Phidget :", err);
           ws.send(JSON.stringify({ type: "phidget_status", status: "error", message: err.message }));
         }
       }
     });
 
     ws.on("close", () => {
-      console.log("⚠️ WS connection closed");
+      console.log("⚠️ Connexion WS fermée");
       for (const [id, entry] of clients.entries()) {
         if (entry.ws === ws) {
-          console.log(`❌ Client ${id} getrennt`);
+          console.log(`❌ Client ${id} déconnecté`);
           clients.delete(id);
           break;
         }
@@ -248,7 +248,7 @@ async function main() {
     });
 
     ws.on("error", (err) => {
-      console.error("❌ WebSocket error:", err);
+      console.error("❌ Erreur WebSocket :", err);
     });
   });
 }
