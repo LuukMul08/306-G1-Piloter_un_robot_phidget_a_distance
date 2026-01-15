@@ -147,6 +147,44 @@ export default class RoverController {
     }
   }
 
+  setKeyVisual(key, active) {
+    const keyMap = {
+      W: { id: "keyArrowUp", dir: "up" },
+      ArrowUp: { id: "keyArrowUp", dir: "up" },
+
+      S: { id: "keyArrowDown", dir: "down" },
+      ArrowDown: { id: "keyArrowDown", dir: "down" },
+
+      A: { id: "keyArrowLeft", dir: "left" },
+      ArrowLeft: { id: "keyArrowLeft", dir: "left" },
+
+      D: { id: "keyArrowRight", dir: "right" },
+      ArrowRight: { id: "keyArrowRight", dir: "right" },
+
+      SPACE: { id: "keySpace", dir: "stop" },
+    };
+
+    const cfg = keyMap[key];
+    if (!cfg) return;
+
+    const el = document.getElementById(cfg.id);
+    if (!el) return;
+
+    el.classList.toggle("key-active", active);
+
+    el.classList.remove(
+      "key-up",
+      "key-down",
+      "key-left",
+      "key-right",
+      "key-stop"
+    );
+
+    if (active) {
+      el.classList.add(`key-${cfg.dir}`);
+    }
+  }
+
   handleKey = (e, pressed) => {
     let key = e.key.length === 1 ? e.key.toUpperCase() : e.key;
     if (key === " ") key = "SPACE";
@@ -171,7 +209,7 @@ export default class RoverController {
         distance: this.model.distance,
       });
     }
-
+    this.setKeyVisual(key, pressed);
     this.keysPressed[key] = pressed;
   };
 

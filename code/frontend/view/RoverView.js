@@ -2,13 +2,26 @@ export default class RoverView {
   constructor(maxLogs = 50) {
     this.maxLogs = maxLogs;
 
-    this.status = document.querySelector("section > div:nth-child(1) p.text-2xl");
-    this.logs = document.querySelector("div.flex-1.overflow-y-auto.log-scrollbar");
-    this.stopButton = document.querySelector("button:has(span.animate-pulse)");
-    this.speedModeEl = document.querySelector("section > div:nth-child(2) p.text-2xl");
-    this.speedBarEl = document.querySelector("section > div:nth-child(2) div > div.bg-primary");
-    this.distanceEl = document.querySelector("section > div:nth-child(3) p.text-2xl");
-    this.headingEl = document.querySelector("div.grid.grid-cols-3 button:nth-child(1) span");
+    this.status = document.querySelector(
+      "section > div:nth-child(1) p.text-2xl"
+    );
+    this.logs = document.querySelector(
+      "div.flex-1.overflow-y-auto.log-scrollbar"
+    );
+    this.stopButton = document.getElementById("keySpace");
+
+    this.speedModeEl = document.querySelector(
+      "section > div:nth-child(2) p.text-2xl"
+    );
+    this.speedBarEl = document.querySelector(
+      "section > div:nth-child(2) div > div.bg-primary"
+    );
+    this.distanceEl = document.querySelector(
+      "section > div:nth-child(3) p.text-2xl"
+    );
+    this.headingEl = document.querySelector(
+      "div.grid.grid-cols-3 button:nth-child(1) span"
+    );
     this.logEntries = [];
 
     // NEU: speichert aktuellen Status, um Doppel-Logs zu vermeiden
@@ -35,8 +48,15 @@ export default class RoverView {
     }
   }
 
-
-  updateUI({ speedMode, factor, speedLock, stopActive, forward, steer, distance }) {
+  updateUI({
+    speedMode,
+    factor,
+    speedLock,
+    stopActive,
+    forward,
+    steer,
+    distance,
+  }) {
     // Speed Mode Text & Bar
     if (this.speedModeEl && this.speedBarEl) {
       const modes = ["Low", "Normal", "High"];
@@ -73,12 +93,24 @@ export default class RoverView {
 
       this.speedBarEl.style.width = width + "%";
       this.speedBarEl.style.backgroundColor = color;
-      this.speedBarEl.style.transition = "width 0.3s ease, background-color 0.3s ease";
+      this.speedBarEl.style.transition =
+        "width 0.3s ease, background-color 0.3s ease";
     }
 
     // STOP Button
     if (this.stopButton) {
-      this.stopButton.textContent = "STOP " + (stopActive ? "ON" : "OFF");
+      const icon = this.stopButton.querySelector(".material-icons");
+
+      // Text-Node nach dem Icon setzen
+      this.stopButton.innerHTML = `
+    ${icon ? icon.outerHTML : ""}
+    STOP ${stopActive ? "ON" : "OFF"}
+  `;
+
+      // Optional: visuelles Feedback
+      this.stopButton.style.backgroundColor = stopActive
+        ? "#7f1d1d"
+        : "#dc2626";
     }
 
     // Distance Anzeige
@@ -126,4 +158,3 @@ export default class RoverView {
     this.logs.scrollTop = this.logs.scrollHeight;
   }
 }
-

@@ -64,6 +64,42 @@
         background-color: #107c10 !important;
         color: white !important;
       }
+
+      /* Basis: Taste gedrückt */
+      .key-active {
+        background-color: #107c10 !important;
+        color: white !important;
+        border-bottom-width: 0 !important;
+        box-shadow: inset 0 4px 10px rgba(0, 0, 0, 0.4);
+        transition: transform 0.08s ease, box-shadow 0.08s ease;
+      }
+
+      /* Richtungen */
+      .key-up {
+        transform: translateY(-6px) scale(1.05);
+        box-shadow: 0 0 18px rgba(34, 197, 94, 0.7);
+      }
+
+      .key-down {
+        transform: translateY(6px) scale(1.05);
+        box-shadow: 0 0 18px rgba(34, 197, 94, 0.7);
+      }
+
+      .key-left {
+        transform: translateX(-6px) scale(1.05);
+        box-shadow: 0 0 18px rgba(34, 197, 94, 0.7);
+      }
+
+      .key-right {
+        transform: translateX(6px) scale(1.05);
+        box-shadow: 0 0 18px rgba(34, 197, 94, 0.7);
+      }
+
+      /* STOP (SPACE) */
+      .key-stop {
+        background-color: #dc2626 !important;
+        box-shadow: 0 0 25px rgba(220, 38, 38, 0.8);
+      }
     </style>
   </head>
 
@@ -89,6 +125,14 @@
             </div>
           </div>
           <div class="flex items-center gap-4">
+            <button
+              onclick="window.location.href = '../switchDevice.html';"
+              class="hidden sm:inline-flex items-center px-3 py-2 border border-gray-300 dark:border-gray-600 text-sm font-medium rounded-lg text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 transition-all"
+              title="Back"
+            >
+              <span class="material-icons text-sm mr-1">arrow_back</span>
+              Back
+            </button>
             <a
               class="hidden sm:inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-lg text-white bg-primary hover:bg-green-700 transition-all"
               href="../Guide/controllerGuide.html"
