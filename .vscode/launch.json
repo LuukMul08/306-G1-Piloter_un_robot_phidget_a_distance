@@ -1,39 +1,26 @@
 {
     "version": "0.2.0",
-
     "configurations": [
+   
         {
-            "name": "Server (nodemon)",
+            "name": "Server",
             "type": "node",
             "request": "launch",
             "runtimeExecutable": "nodemon",
-            "program": "${workspaceFolder}/code/backend/server.js",
-            "cwd": "${workspaceFolder}/code/backend",
-            "restart": true,
-            "console": "integratedTerminal",
             "skipFiles": [
                 "<node_internals>/**"
             ],
-            "env": {
-                "NODE_ENV": "development"
-            }
+            "program": "${workspaceFolder}/code/backend/server.js",
+            "cwd": "${workspaceFolder}/code/backend",
+            "restart": true,
+            "console": "integratedTerminal"
         },
         {
-            "name": "Client (Chrome)",
+            "name": "Client",
             "type": "chrome",
             "request": "launch",
-            "url": "http://localhost:3000/index.html",
+            "url": "http://localhost:5501/code/frontend/index.html",
             "webRoot": "${workspaceFolder}/code/frontend"
-        }
-    ],
-
-    "compounds": [
-        {
-            "name": "Server + Client",
-            "configurations": [
-                "Server (nodemon)",
-                "Client (Chrome)"
-            ]
         }
     ]
 }
