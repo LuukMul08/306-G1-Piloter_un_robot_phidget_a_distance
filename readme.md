@@ -18,9 +18,6 @@ Contient l’intégralité du code source du projet. Selon la nature du projet, 
 
 * Le backend
 * Le frontend
-* Les scripts nécessaires
-* Les configurations
-* Les tests éventuels
 
 ### **2. `/documentation`**
 
@@ -72,13 +69,23 @@ Liste des technologies, frameworks et outils utilisés pour développer et docum
 
 ## 🚀 Installation et exécution
 
-Explique comment lancer l’application. Par exemple :
+Tout d'abord Il vous faut lancer votre serveur et votre client depuis VSCode car c'est une application en local :
 
-```bash
-git clone https://github.com/LuukMul08/306-G1-Piloter_un_robot_phidget_a_distance.git
-cd code
-# puis lancez l'application suivant la technologie utilisée
-```
+![alt text](image.png)
+
+Dès que vous arriverez sur la page de Dashboard du client, veuillez brancher le Dongle de connexion puis vous connectez au "7Links" (mdp : #326IsBest#) du Rover.
+
+Dès que cela est effectué, entrer l'URL du backend puis envoyer les informations essentielles (IP & Port) du robot aux serveur pour pouvoir le contrôler.
+
+![alt text](image-1.png)
+
+Ensuite veuillez choisir si vous voulez contrôler votre robot avec une manette Xbox One ou le clavier de votre ordinateur.
+
+![alt text](image-2.png)
+
+Vous pouvez, dès l'accès aux modes, consulter le guide pour connaître comment fonctionne les différentes touches et inputs de la manette sur le robot.
+
+![alt text](image-3.png)
 
 ---
 
