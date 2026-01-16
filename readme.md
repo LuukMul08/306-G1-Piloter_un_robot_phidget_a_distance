@@ -64,7 +64,7 @@ Vous pouvez ajouter ici les noms des membres :
 Liste des technologies, frameworks et outils utilisés pour développer et documenter le projet. Par exemple :
 
 * Langage(s) : Javascript
-* Framework(s) : …
+* Framework(s) : TailWindCSS
 * Outils de gestion de versions : GitHub
 * Gestion de projet : Planning, journal, réunions
 
@@ -108,6 +108,11 @@ git push origin S1
 ## 📬 Contact
 
 Pour toute question concernant le projet, veuillez contacter les membres du groupe ou le formateur responsable du module 306.
+
+* **Project Owner**: Théo Pasquier, `Theo.Pasquier@studentfr.ch`
+* **Scrum Master**: Andrei Pires Donose, `Andrei.PiresDonose@studentfr.ch` 
+* **Testeur**: Luuk Müller, `Luuk.Mueller@studentfr.ch`
+* **Dévéloppeurs**: Tout le monde
 
 ---
 
