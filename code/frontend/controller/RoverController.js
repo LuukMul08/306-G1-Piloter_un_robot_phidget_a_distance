@@ -4,7 +4,6 @@ import RoverView from "../view/RoverView.js";
 const WS_URL = "ws://localhost:8080"; // URL du WebSocket
 const CLIENT_ID_KEY = "rover-client-id"; // Clé pour stocker l'ID unique du client
 
-// Récupère ou génère un ID unique pour le client
 function getClientId() {
   let id = localStorage.getItem(CLIENT_ID_KEY);
   if (!id) {
@@ -15,28 +14,27 @@ function getClientId() {
 }
 
 export default class RoverController {
-  model = new RoverModel(); // Modèle du Rover
-  view = new RoverView();   // Vue pour l'interface
-  ws = null;                // WebSocket
-  controllerActive = false; // État du gamepad
+  model = new RoverModel();
+  view = new RoverView();
+  ws = null;
+  controllerActive = false;
 
-  lastDistanceBlockLog = 0;        // Temps dernier log de blocage distance
-  distanceLogCooldown = 1000;      // Délai entre deux alertes distance critique (ms)
+  lastDistanceBlockLog = 0;
+  distanceLogCooldown = 1000;
 
-  status = "NOT CONNECTED";        // État du rover
-  clientId = getClientId();        // ID unique client
+  status = "NOT CONNECTED";
+  clientId = getClientId();
 
-  // Suivi de l'état précédent des boutons pour détecter les changements
-  prevBtnX = false; // Toggle STOP
-  prevBtnA = false; // Bouton vitesse -
-  prevBtnY = false; // Bouton vitesse +
+  prevBtnX = false;
+  prevBtnA = false;
+  prevBtnY = false;
+
+  previousSpeedMode = null; // mémorisation du mode avant LOW
 
   constructor() {
-    // Connexion WebSocket et lancement de la boucle principale
     this.connectWebSocket();
     this.loop();
 
-    // Gestion des événements de connexion/déconnexion du gamepad
     window.addEventListener("gamepadconnected", (e) =>
       this.handleGamepadConnect(e)
     );
@@ -45,46 +43,40 @@ export default class RoverController {
     );
   }
 
-  // Connexion WebSocket
   connectWebSocket() {
     this.status = "CONNECTING";
-    this.view.updateStatus("CONNECTING…", false); 
+    this.view.updateStatus("CONNECTING…", false);
     this.view.addLog("Tentative de connexion WebSocket…", "INFO");
 
     this.ws = new WebSocket(WS_URL);
 
     this.ws.onopen = () => {
       this.view.addLog("WebSocket connecté", "INFO");
-      // Envoi d'un message "hello" au serveur
       this.ws.send(JSON.stringify({ type: "hello", clientId: this.clientId }));
     };
 
     this.ws.onclose = () => {
-      if (this.status !== "DISCONNECTED") {
-        this.status = "DISCONNECTED";
-        this.view.addLog("WebSocket déconnecté", "WARN");
-        this.view.updateStatus("DISCONNECTED", false);
-      }
+      this.status = "DISCONNECTED";
+      this.view.updateStatus("DISCONNECTED", false);
+      this.view.addLog("WebSocket déconnecté", "WARN");
       this.ws = null;
     };
 
     this.ws.onerror = (event) => {
       console.error("Erreur WebSocket :", event);
       this.view.addLog("Erreur WebSocket (voir console)", "ERROR");
-      this.ws = null;
       this.status = "DISCONNECTED";
       this.view.updateStatus("DISCONNECTED", false);
+      this.ws = null;
     };
 
     this.ws.onmessage = (e) => this.handleWsMessage(e);
   }
 
-  // Gestion des messages WebSocket
   handleWsMessage(e) {
     try {
       const data = JSON.parse(e.data);
 
-      // Rover connecté
       if (data.type === "rover_connected") {
         this.status = "CONNECTED";
         this.view.addLog(
@@ -94,7 +86,6 @@ export default class RoverController {
         this.view.updateStatus("CONNECTED", true);
       }
 
-      // Statut Phidget
       if (data.type === "phidget_status") {
         if (data.status === "connected") {
           this.status = "CONNECTED";
@@ -107,13 +98,11 @@ export default class RoverController {
         }
       }
 
-      // Distance
       if (data.distance != null) {
         const prev = this.model.distance;
         this.model.updateDistance(parseFloat(data.distance));
 
         const now = Date.now();
-        // Log distance critique si < 300mm
         if (
           prev === null ||
           (this.model.distance < 300 &&
@@ -127,7 +116,6 @@ export default class RoverController {
         }
       }
 
-      // Logs serveur
       if (data.type === "log" && data.message) {
         this.view.addLog(`[Serveur] ${data.message}`, "INFO");
       }
@@ -137,39 +125,34 @@ export default class RoverController {
     }
   }
 
-  // Gamepad connecté
   handleGamepadConnect(e) {
     if (!this.controllerActive) {
-      this.view.addLog("Gamepad connecté", "INFO");
       this.controllerActive = true;
-      this.loop();
+      this.view.addLog("Gamepad connecté", "INFO");
+      this.view.updateStatus("🎮 Contrôleur actif");
     }
   }
 
-  // Gamepad déconnecté
   handleGamepadDisconnect(e) {
     if (this.controllerActive) {
-      this.view.addLog("Gamepad déconnecté", "WARN");
       this.controllerActive = false;
+      this.view.addLog("Gamepad déconnecté", "WARN");
       this.view.updateStatus("⏳ En attente du contrôleur...");
     }
   }
 
-  // Mise à jour des positions des joysticks
   updateJoystickPositions = (gp) => {
     if (!gp) return;
 
-    const lsY = gp.axes[1] || 0; // Stick gauche vertical
-    const rsX = gp.axes[2] || 0; // Stick droit horizontal
+    const lsY = gp.axes[1] || 0;
+    const rsX = gp.axes[2] || 0;
 
-    // Stick gauche (Drive)
     const driveKnob = document.getElementById("drive-knob-handle");
     if (driveKnob) {
       const maxMove = 40;
       driveKnob.style.transform = `translate(${0}px, ${lsY * maxMove}px)`;
     }
 
-    // Stick droit (Steering)
     const steerKnob = document.getElementById("steer-knob-handle");
     if (steerKnob) {
       const maxMove = 40;
@@ -177,15 +160,14 @@ export default class RoverController {
     }
   };
 
-  // Boucle principale
   loop = () => {
     const gp = navigator.getGamepads()[0];
 
     if (!gp) {
-      // Pas de gamepad détecté
       if (this.controllerActive) {
         this.controllerActive = false;
         this.view.updateStatus("⏳ En attente du contrôleur...");
+        this.view.addLog("Gamepad déconnecté", "WARN");
       }
       requestAnimationFrame(this.loop);
       return;
@@ -194,34 +176,41 @@ export default class RoverController {
     if (!this.controllerActive) {
       this.controllerActive = true;
       this.view.updateStatus("🎮 Contrôleur actif");
+      this.view.addLog("Gamepad connecté", "INFO");
     }
 
-    // --- Boutons ---
     const btnA = gp.buttons[0]?.pressed;
     const btnX = gp.buttons[2]?.pressed;
     const btnY = gp.buttons[3]?.pressed;
 
-    // Toggle STOP uniquement si changement d'état
+    // Toggle STOP
     if (btnX && !this.prevBtnX) {
       this.model.stopActive = !this.model.stopActive;
       this.view.addLog(
-        `Stop basculé : ${this.model.stopActive ? "ON" : "OFF"}`,
+        `STOP basculé : ${this.model.stopActive ? "ON" : "OFF"}`,
         "WARN"
       );
     }
     this.prevBtnX = btnX;
 
-    // Boutons vitesse
-    if (btnA && !this.prevBtnA)
+    // Vitesse
+    if (btnA && !this.prevBtnA) {
       this.model.speedMode = Math.max(1, this.model.speedMode - 1);
-    if (btnY && !this.prevBtnY)
+      this.view.addLog(`Mode vitesse réduit → ${this.model.speedMode}`, "INFO");
+    }
+    if (btnY && !this.prevBtnY) {
       this.model.speedMode = Math.min(3, this.model.speedMode + 1);
+      this.view.addLog(
+        `Mode vitesse augmenté → ${this.model.speedMode}`,
+        "INFO"
+      );
+    }
     this.prevBtnA = btnA;
     this.prevBtnY = btnY;
 
-    // --- Direction & avance ---
-    const steer = this.model.deadzone(gp.axes[2]);
+    // Axes joysticks
     let forward = -this.model.deadzone(gp.axes[1]);
+    const steer = this.model.deadzone(gp.axes[2]);
 
     const rt = gp.buttons[7]?.value || 0;
     const lt = gp.buttons[6]?.value || 0;
@@ -229,24 +218,42 @@ export default class RoverController {
     else if (lt > 0 && rt === 0) forward = -lt;
     else if (rt > 0 && lt > 0) forward = 0;
 
-    // Blocage distance
-    if (
-      this.model.distance !== null &&
-      this.model.distance < this.model.minDistanceBlock &&
-      forward > 0
-    ) {
-      forward = 0;
-      const now = Date.now();
-      if (now - this.lastDistanceBlockLog > this.distanceLogCooldown) {
-        this.view.addLog("Blocage distance actif, avance stoppé", "WARN");
-        this.lastDistanceBlockLog = now;
+    // Gestion distance
+    if (this.model.distance !== null) {
+      // Auto Speed Mode LOW ≤ 100 cm
+      if (this.model.distance <= 1000 && this.model.speedMode !== 1) {
+        if (this.previousSpeedMode === null)
+          this.previousSpeedMode = this.model.speedMode;
+        this.model.speedMode = 1;
+        this.view.addLog(
+          `Distance critique (${this.model.distance} mm) → Mode vitesse LOW`,
+          "WARN"
+        );
+      } else if (
+        this.previousSpeedMode !== null &&
+        this.model.distance > 1000
+      ) {
+        this.model.speedMode = this.previousSpeedMode;
+        this.previousSpeedMode = null;
+        this.view.addLog(
+          `Distance sécurisée (${this.model.distance} mm) → Mode vitesse restauré à ${this.model.speedMode}`,
+          "INFO"
+        );
+      }
+
+      // Blocage avance si trop proche
+      if (this.model.distance < this.model.minDistanceBlock && forward > 0) {
+        forward = 0;
+        const now = Date.now();
+        if (now - this.lastDistanceBlockLog > this.distanceLogCooldown) {
+          this.view.addLog("Blocage distance actif, avance stoppée", "WARN");
+          this.lastDistanceBlockLog = now;
+        }
       }
     }
 
-    // Calcul des moteurs
-    const { left, right, factor } = this.model.computeMotors(forward, steer);
+    const { left, right } = this.model.computeMotors(forward, steer);
 
-    // Envoi au serveur
     if (this.ws?.readyState === WebSocket.OPEN) {
       this.ws.send(
         JSON.stringify({
@@ -258,10 +265,9 @@ export default class RoverController {
       );
     }
 
-    // Mise à jour de l'UI
     this.view.updateUI({
       speedMode: this.model.speedMode,
-      speedLock: this.model.speedLock,
+      speedLock: this.model.speedMode === 1 && this.model.distance <= 1000,
       stopActive: this.model.stopActive,
       distance: this.model.distance,
       forward,
