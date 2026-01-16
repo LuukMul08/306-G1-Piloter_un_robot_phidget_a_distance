@@ -71,8 +71,8 @@ async function connectPhidget(model, ip, port) {
     console.log(`✅ Connecté au Phidget Hub ${ip}:${port}`);
 
     // Initialiser moteurs et capteurs une seule fois
-    await model.initMotors(667784, 667784, 0, 1);
-    await model.initDistanceSensor(667784, 0);
+    await model.initMotors(0, 1);
+    await model.initDistanceSensor(0);
     console.log("✅ Moteurs et capteur de distance initialisés");
 
     savedPhidgetConn = conn;

@@ -20,15 +20,13 @@ export default class RoverModel {
    * @param {number} channelLeft - Canal du moteur gauche (par défaut 0)
    * @param {number} channelRight - Canal du moteur droit (par défaut 1)
    */
-  async initMotors(serialLeft, serialRight, channelLeft = 0, channelRight = 1) {
+  async initMotors(channelLeft, channelRight) {
     this.motorLeft = new phidget22.DCMotor();
     this.motorLeft.setIsRemote(true);
-    this.motorLeft.setDeviceSerialNumber(serialLeft);
     this.motorLeft.setChannel(channelLeft);
 
     this.motorRight = new phidget22.DCMotor();
     this.motorRight.setIsRemote(true);
-    this.motorRight.setDeviceSerialNumber(serialRight);
     this.motorRight.setChannel(channelRight);
 
     // --- Ouverture des moteurs avec timeout ---
@@ -38,14 +36,12 @@ export default class RoverModel {
 
   /**
    * Initialise le capteur de distance.
-   * @param {number} serial - Numéro de série du capteur
    * @param {number} channel - Canal du capteur (par défaut 0)
    */
-  async initDistanceSensor(serial, channel = 0) {
+  async initDistanceSensor(channel) {
     try {
       this.distanceSensor = new phidget22.DistanceSensor();
       this.distanceSensor.setIsRemote(true);
-      this.distanceSensor.setDeviceSerialNumber(serial);
       this.distanceSensor.setChannel(channel);
 
       // --- Met à jour la distance à chaque changement ---
