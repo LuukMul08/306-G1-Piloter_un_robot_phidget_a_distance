@@ -60,29 +60,29 @@ export default class RoverView {
     steer,
     distance,
   }) {
-    // Texte du mode vitesse & barre de progression
+    // --- Speed Mode & Bar ---
     if (this.speedModeEl && this.speedBarEl) {
       const modes = ["Low", "Normal", "High"];
       const modeText = modes[speedMode - 1] || "Inconnu";
 
-      let width = 0;
-      let color = "";
-      let textColor = "";
+      let width = 0,
+        color = "",
+        textColor = "";
 
       switch (speedMode) {
         case 1:
           width = 33;
-          color = "#22c55e"; // vert
+          color = "#22c55e";
           textColor = "#16a34a";
           break;
         case 2:
           width = 66;
-          color = "#facc15"; // jaune
+          color = "#facc15";
           textColor = "#ca8a04";
           break;
         case 3:
           width = 100;
-          color = "#ef4444"; // rouge
+          color = "#ef4444";
           textColor = "#b91c1c";
           break;
         default:
@@ -100,28 +100,26 @@ export default class RoverView {
         "width 0.3s ease, background-color 0.3s ease";
     }
 
-    // STOP-Button in RoverView.updateUI
+    // --- Distance ---
+    if (this.distanceEl && distance !== undefined) {
+      this.distanceEl.innerHTML = `${Number(distance) / 10}<span class="text-sm font-normal ml-1">cm</span>`;
+    }
+
+    // --- STOP Button ---
     if (this.stopButton) {
-      // Icon bleibt unverändert, nur Text aktualisieren
       let textEl = this.stopButton.querySelector(".stop-text");
       if (!textEl) {
         textEl = document.createElement("span");
-        textEl.classList.add("stop-text", "ml-2"); // Abstand zum Icon
+        textEl.classList.add("stop-text", "ml-2");
         this.stopButton.appendChild(textEl);
       }
       textEl.textContent = stopActive ? "ON" : "OFF";
 
-      // Hintergrundfarbe
       this.stopButton.style.backgroundColor = stopActive
         ? "#7f1d1d"
         : "#dc2626";
-
-      // Optional: pulsierende Animation aktivieren wenn STOP ON
-      if (stopActive) {
-        this.stopButton.classList.add("animate-pulse");
-      } else {
-        this.stopButton.classList.remove("animate-pulse");
-      }
+      if (stopActive) this.stopButton.classList.add("animate-pulse");
+      else this.stopButton.classList.remove("animate-pulse");
     }
   }
 
