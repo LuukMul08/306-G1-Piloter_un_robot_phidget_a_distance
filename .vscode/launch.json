@@ -6,7 +6,6 @@
             "name": "Server",
             "type": "node",
             "request": "launch",
-            "runtimeExecutable": "nodemon",
             "skipFiles": [
                 "<node_internals>/**"
             ],
